@@ -42,6 +42,21 @@ The provider logos react to what your agents are actually doing:
 
 Live Claude & Codex 5-hour / weekly usage, cost, and reset countdowns — swipeable pages in the notch.
 
+## What's different from Codex Island
+
+Codex Island is a **passive meter** — it shows your usage. Agent Island is **active** — it watches your sessions and acts on them. Everything below the first row is new here:
+
+| | Codex Island | Agent Island |
+|---|:---:|:---:|
+| Usage / cost / reset in the notch | ✅ | ✅ *(inherited)* |
+| **Auto-resume** a session after the 5h limit resets | — | ✅ Claude & Codex |
+| **Logo reacts to session state** — breathe (working), spin (your turn), red + beep (stalled) | — | ✅ |
+| **Auto-Trigger** page inside the island | — | ✅ |
+| **Status-guide** settings tab (live legend + sound toggle) | — | ✅ |
+| Cross-tool session picker with real thread titles, archived filtered out | — | ✅ |
+
+In short: Codex Island tells you *how much you've used*; Agent Island makes sure *your agents keep running* — the night-watch.
+
 ## Install
 
 ```sh
