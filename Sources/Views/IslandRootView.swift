@@ -446,6 +446,7 @@ private struct LogoOverlay: View {
     @ObservedObject private var visibility = ProviderVisibilityStore.shared
     @ObservedObject private var monitor = ActivityMonitor.shared
     @State private var pulse = false
+    @State private var spinAngle: Double = 0
 
     var body: some View {
         // Hidden providers fully drop out — header / peek pill / chrome
@@ -464,6 +465,7 @@ private struct LogoOverlay: View {
                 .foregroundStyle(st == .stalled ? Self.alarmRed : color)
                 .frame(width: 20, height: 20)
                 .scaleEffect(scale)
+                .rotationEffect(.degrees(spinAngle))
                 .shadow(color: glowColor.opacity(pulse ? 0.9 : 0.25), radius: glowRadius)
                 .padding(provider == .claude ? .leading : .trailing, edgePadding)
                 .padding(.top, topPadding)
@@ -471,7 +473,8 @@ private struct LogoOverlay: View {
                 .animation(.openMorph, value: isVisible)
                 .animation(pulseAnimation, value: pulse)
                 .animation(.easeInOut(duration: 0.3), value: st)
-                .onAppear { pulse = true }
+                .onAppear { pulse = true; updateSpin(st) }
+                .onChange(of: st) { updateSpin($0) }
                 .accessibilityLabel(isVisible ? providerLabel : L10n.tr("%@ (hidden)", providerLabel))
                 .accessibilityHidden(!isVisible)
         }
@@ -510,6 +513,23 @@ private struct LogoOverlay: View {
         case .working:  return .easeInOut(duration: 1.7).repeatForever(autoreverses: true)
         case .needsYou: return .easeInOut(duration: 0.75).repeatForever(autoreverses: true)
         case .stalled:  return .easeInOut(duration: 0.42).repeatForever(autoreverses: true)
+        }
+    }
+
+    /// Claude spins clockwise, Codex counter-clockwise — opposite directions
+    /// so a glance tells you which one just finished.
+    private var spinDirection: Double { provider == .claude ? 1 : -1 }
+
+    private func updateSpin(_ state: ActivityMonitor.State) {
+        guard state == .needsYou else {
+            withAnimation(.easeOut(duration: 0.35)) { spinAngle = 0 }
+            return
+        }
+        spinAngle = 0
+        DispatchQueue.main.async {
+            withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
+                spinAngle = spinDirection * 360
+            }
         }
     }
 
