@@ -1,0 +1,68 @@
+import Foundation
+
+/// Which page of the expanded panel is currently active. Persisted across
+/// launches so the app reopens on the last-viewed page.
+@MainActor
+final class ScreenPref: ObservableObject {
+    static let shared = ScreenPref()
+
+    enum Screen: String, CaseIterable {
+        case usage
+        case cost
+        case overview
+
+        var pageIndex: Int {
+            Self.allCases.firstIndex(of: self) ?? 0
+        }
+
+        var pageLabel: String {
+            switch self {
+            case .usage:    return L10n.tr("Usage")
+            case .cost:     return L10n.tr("Cost")
+            case .overview: return L10n.tr("Overview")
+            }
+        }
+    }
+
+    private static let key = "MacIsland.screen"
+    private static let swipedKey = "MacIsland.hasSwipedScreen"
+
+    @Published var screen: Screen {
+        didSet {
+            UserDefaults.standard.set(screen.rawValue, forKey: Self.key)
+            // Once the user has swiped between pages even once, we've made
+            // our point — kill the discoverability peek in `PagedContent`.
+            if oldValue != screen, !hasSwipedScreen { hasSwipedScreen = true }
+        }
+    }
+
+    @Published var hasSwipedScreen: Bool {
+        didSet { UserDefaults.standard.set(hasSwipedScreen, forKey: Self.swipedKey) }
+    }
+
+    private init() {
+        let raw = UserDefaults.standard.string(forKey: Self.key) ?? ""
+        self.screen = Screen(rawValue: raw) ?? .usage
+        // Demo mode forces the discoverability peek to fire on every
+        // launch so screen recordings always capture it. didSet does not
+        // run for init assignments, so this never persists back to
+        // UserDefaults — the real app's onboarding state is preserved.
+        self.hasSwipedScreen = AppEnvironment.isDemo ? false : UserDefaults.standard.bool(forKey: Self.swipedKey)
+    }
+
+    /// Edge-clamped carousel — swiping past the rightmost page does
+    /// nothing (no wrap to page 1), and likewise for the leftmost page.
+    /// Matches the iOS Home Screen rubber-band feel where the user
+    /// understands they've hit a boundary instead of teleporting around.
+    func advance() {
+        let pages = Screen.allCases
+        guard screen.pageIndex < pages.count - 1 else { return }
+        screen = pages[screen.pageIndex + 1]
+    }
+
+    func rewind() {
+        let pages = Screen.allCases
+        guard screen.pageIndex > 0 else { return }
+        screen = pages[screen.pageIndex - 1]
+    }
+}
