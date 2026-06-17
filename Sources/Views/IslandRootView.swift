@@ -128,7 +128,7 @@ struct IslandRootView: View {
                         switch ScreenPref.shared.screen {
                         case .usage: StylePref.shared.cycle()
                         case .cost:  CostStylePref.shared.cycle()
-                        case .overview: return
+                        case .overview, .triggers: return
                         }
                         return
                     }

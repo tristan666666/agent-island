@@ -171,3 +171,10 @@
 "Tool" = "工具";
 "Thread" = "线程";
 "No active threads" = "无活跃线程";
+
+/* Auto-trigger island page (4th page) */
+"Auto" = "自动";
+"Auto-trigger" = "自动触发";
+"Manage" = "管理";
+"No triggers yet." = "还没有触发器。";
+"Add a trigger" = "新建触发器";

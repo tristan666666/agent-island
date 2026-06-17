@@ -10,6 +10,7 @@ final class ScreenPref: ObservableObject {
         case usage
         case cost
         case overview
+        case triggers
 
         var pageIndex: Int {
             Self.allCases.firstIndex(of: self) ?? 0
@@ -20,6 +21,7 @@ final class ScreenPref: ObservableObject {
             case .usage:    return L10n.tr("Usage")
             case .cost:     return L10n.tr("Cost")
             case .overview: return L10n.tr("Overview")
+            case .triggers: return L10n.tr("Auto")
             }
         }
     }
