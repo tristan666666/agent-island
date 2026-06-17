@@ -9,8 +9,9 @@ enum AppMode {
 enum AppEnvironment {
     static let current: AppMode = {
         let env = ProcessInfo.processInfo.environment
-        if env["CODEXISLAND_DEMO"] == "1" { return .demo }
-        if env["CODEXISLAND_DEBUG"] == "1" { return .debug }
+        func on(_ keys: String...) -> Bool { keys.contains { env[$0] == "1" } }
+        if on("AGENTISLAND_DEMO", "CODEXISLAND_DEMO") { return .demo }
+        if on("AGENTISLAND_DEBUG", "CODEXISLAND_DEBUG") { return .debug }
         return .normal
     }()
 

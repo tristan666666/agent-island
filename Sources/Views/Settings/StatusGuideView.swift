@@ -27,10 +27,38 @@ struct StatusGuideView: View {
             ) {
                 SettingsToggle(isOn: sound.enabled) { sound.enabled.toggle() }
             }
+
+            // Filming aid: force any state on the real notch on cue. Only shown
+            // when launched with AGENTISLAND_DEMO=1, never in the shipped app.
+            if AppEnvironment.isDemo || AppEnvironment.isDebug {
+                sectionLabel("Demo — force a state on the notch").padding(.top, 16)
+                HStack(spacing: 8) {
+                    demoButton("Working", .working)
+                    demoButton("Your turn", .needsYou)
+                    demoButton("Stalled", .stalled)
+                    demoButton("Live", nil)
+                }
+                .padding(.horizontal, 10)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 18)
         .padding(.bottom, 16)
+    }
+
+    @ViewBuilder
+    private func demoButton(_ label: String, _ state: ActivityMonitor.State?) -> some View {
+        Button { ActivityMonitor.shared.demo(state) } label: {
+            Text(label)
+                .font(Typography.label)
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6).fill(.white.opacity(0.06))
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.white.opacity(0.10), lineWidth: 0.5))
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder

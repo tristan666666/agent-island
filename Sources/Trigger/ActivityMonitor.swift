@@ -18,9 +18,21 @@ final class ActivityMonitor: ObservableObject {
 
     @Published private(set) var claude: State = .idle
     @Published private(set) var codex: State = .idle
+    @Published private var demoClaude: State?
+    @Published private var demoCodex: State?
 
     func state(for provider: AlertEngine.Provider) -> State {
-        provider == .claude ? claude : codex
+        if provider == .claude { return demoClaude ?? claude }
+        return demoCodex ?? codex
+    }
+
+    /// Demo override for filming the launch video — forces both logos to
+    /// `state` on the real notch (pass nil to return to live detection). Beeps
+    /// on stalled so the alarm can be captured on cue.
+    func demo(_ state: State?) {
+        demoClaude = state
+        demoCodex = state
+        if state == .stalled { playBeep() }
     }
 
     private var lastWorking: [String: Date] = [:]
@@ -55,6 +67,10 @@ final class ActivityMonitor: ObservableObject {
         guard StallSoundStore.shared.enabled else { return }
         if let last = lastBeepAt, Date().timeIntervalSince(last) < 30 { return }   // throttle
         lastBeepAt = Date()
+        playBeep()
+    }
+
+    private func playBeep() {
         NSSound.beep()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { NSSound.beep() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.56) { NSSound.beep() }
