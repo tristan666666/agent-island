@@ -82,19 +82,24 @@ enum SessionScanner {
         return out
     }
 
+    /// Reads the first JSONL line in full. Codex's `session_meta` is line 1 but
+    /// can be tens of KB (it embeds the full base instructions), so a fixed-size
+    /// read truncates it — keep pulling chunks until the first newline.
     private static func codexMeta(_ path: String) -> (String, String)? {
         guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
         defer { try? handle.close() }
-        let data = (try? handle.read(upToCount: 16_384)) ?? Data()
-        for line in String(decoding: data, as: UTF8.self).split(separator: "\n") {
-            guard let lineData = line.data(using: .utf8),
-                  let object = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
-                  object["type"] as? String == "session_meta",
-                  let payload = object["payload"] as? [String: Any]
-            else { continue }
-            return (payload["id"] as? String ?? "", payload["cwd"] as? String ?? "")
+        var buffer = Data()
+        while buffer.firstIndex(of: 0x0A) == nil {
+            guard let chunk = try? handle.read(upToCount: 65_536), !chunk.isEmpty else { break }
+            buffer.append(chunk)
+            if buffer.count > 2_000_000 { break }
         }
-        return nil
+        let firstLine = buffer.firstIndex(of: 0x0A).map { buffer.prefix(upTo: $0) } ?? buffer.prefix(buffer.count)
+        guard let object = try? JSONSerialization.jsonObject(with: Data(firstLine)) as? [String: Any],
+              object["type"] as? String == "session_meta",
+              let payload = object["payload"] as? [String: Any]
+        else { return nil }
+        return (payload["id"] as? String ?? "", payload["cwd"] as? String ?? "")
     }
 
     // MARK: - Helpers
