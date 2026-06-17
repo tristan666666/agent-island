@@ -6,6 +6,7 @@ import SwiftUI
 struct TriggerSettingsView: View {
     @ObservedObject private var store = TriggerStore.shared
     @ObservedObject private var usage = UsageStore.shared
+    @ObservedObject private var sound = StallSoundStore.shared
 
     @State private var allSessions: [ScannedSession] = []
     @State private var scanning = false
@@ -194,40 +195,42 @@ struct TriggerSettingsView: View {
 
     // MARK: - Status guide
 
-    /// Plain-language legend for the logo animations, so anyone (friends
-    /// included) can read what the island is telling them.
+    /// Each row shows the *real* logo animating that state (not a stand-in
+    /// icon), plus a toggle to silence the stall beep. Styled like the other
+    /// settings sections for consistency.
     private var statusGuide: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Status guide").padding(.top, 16)
-            VStack(alignment: .leading, spacing: 9) {
-                legendRow("circle.fill", .white.opacity(0.65),
-                          "Working", "The agent is producing output — its logo gently breathes.")
-                legendRow("arrow.clockwise", IslandColor.claude,
-                          "Your turn", "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply.")
-                legendRow("exclamationmark.triangle.fill", Self.alarmRed,
-                          "Stalled", "A session froze mid-conversation — the logo turns red and beeps.")
+            sectionLabel("Status guide").padding(.top, 16).padding(.bottom, 2)
+            legendRow(.working, "Working", "The agent is producing output — its logo gently breathes.")
+            legendRow(.needsYou, "Your turn", "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply.")
+            legendRow(.stalled, "Stalled", "A session froze mid-conversation — the logo turns red and beeps.")
+            SettingsRow(
+                title: "Stall sound",
+                subtitle: "Beep when a session stalls. Turn off for a silent red alert."
+            ) {
+                SettingsToggle(isOn: sound.enabled) { sound.enabled.toggle() }
             }
-            .padding(.horizontal, 10)
-            .padding(.top, 4)
         }
     }
 
-    private static let alarmRed = Color(red: 0.96, green: 0.34, blue: 0.29)
-
     @ViewBuilder
-    private func legendRow(_ symbol: String, _ tint: Color, _ title: String, _ desc: String) -> some View {
-        HStack(alignment: .top, spacing: 11) {
-            Image(systemName: symbol)
-                .font(.system(size: 12))
-                .foregroundStyle(tint)
-                .frame(width: 18, alignment: .center)
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(L10n.tr(title)).font(Typography.label).foregroundStyle(.white.opacity(0.9))
-                Text(L10n.tr(desc)).font(Typography.micro).foregroundStyle(.white.opacity(0.5))
+    private func legendRow(_ state: ActivityMonitor.State, _ title: String, _ desc: String) -> some View {
+        HStack(alignment: .center, spacing: 14) {
+            StatePreviewLogo(state: state)
+                .frame(width: 30, height: 26)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.tr(title))
+                    .font(Typography.rowTitle).tracking(-0.07)
+                    .foregroundStyle(.white.opacity(0.92))
+                Text(L10n.tr(desc))
+                    .font(Typography.label)
+                    .foregroundStyle(.white.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 8)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 9)
     }
 
     // MARK: - Helpers

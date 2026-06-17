@@ -187,3 +187,7 @@
 "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply." = "这一轮跑完了 —— logo 转圈（Claude 顺时针、Codex 逆时针），提醒你去回复。";
 "Stalled" = "卡住了";
 "A session froze mid-conversation — the logo turns red and beeps." = "对话中途卡住 / 中断了 —— logo 变红并哔哔提醒。";
+
+/* Stall sound toggle */
+"Stall sound" = "卡住提示音";
+"Beep when a session stalls. Turn off for a silent red alert." = "卡住时哔哔提醒。关掉则只剩红色、无声。";
