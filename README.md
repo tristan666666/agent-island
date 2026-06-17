@@ -1,32 +1,67 @@
+<div align="center">
+
 # Agent Island
 
-A macOS notch overlay that does two things:
+**Your AI night-watch — keeps your Claude & Codex agents running.**
 
-1. **Usage island** — a Dynamic-Island-style floating panel that shows your live Claude and Codex 5-hour / weekly usage, cost, and reset countdowns.
-2. **Auto-Trigger** — when a provider's 5-hour window resets, automatically resume a Claude Code or Codex session with a message (e.g. `继续` / `OK`) so an unattended task keeps going instead of stalling while you're away. Also supports a fixed every-N-hours schedule. Configure it in **Settings → Triggers**: pick any Claude or Codex session, set the message, choose *After reset* or *Every Nh*, enable.
+[简体中文](README.zh-CN.md)
 
-Native Swift + SwiftUI. Runs as a menu-bar-less accessory app (`LSUIElement`), floats above all spaces.
+![Agent Island](Assets/launch.gif)
 
-## Build
+</div>
+
+Agent Island lives in your MacBook notch. It isn't just a usage meter — it **watches your Claude Code and Codex sessions and acts on them**: resumes them when you hit the 5-hour limit, tells you the moment a turn finishes, and alarms when one stalls.
+
+## Why
+
+Heavy Claude / Codex use has three quiet time-sinks:
+
+- You hit the **5-hour limit** mid-task and it dies until you come back.
+- A session **stalls** (stuck tool, waiting on input, dead network) and sits idle for half an hour.
+- A session **finishes** while you're away and you never notice it's your turn.
+
+Agent Island handles all three, from the notch.
+
+## Features
+
+### 🌙 Auto-resume after reset — the night-watch
+
+When your 5-hour window resets, Agent Island auto-sends a message (`继续`, `OK`, whatever you set) to a chosen Claude or Codex session so the task keeps going — no babysitting. Set it up in **Settings → 自动触发**, or run on a fixed every-N-hours schedule. It fires at the *real* reset instant, read from each provider's usage API.
+
+### ⚡ Live session state, on your logos
+
+The provider logos react to what your agents are actually doing:
+
+| State | How it's detected | The cue |
+|---|---|---|
+| **Working** | transcript still growing | logo breathes + soft glow |
+| **Your turn** | turn finished + stopped | logo **spins** — Claude clockwise ↻, Codex counter-clockwise ↺ — and brightens |
+| **Stalled** | frozen mid-turn too long | **red** alarm pulse + three beeps |
+
+### 📊 Usage island
+
+Live Claude & Codex 5-hour / weekly usage, cost, and reset countdowns — swipeable pages in the notch.
+
+## Install
 
 ```sh
-./build.sh          # universal (arm64 + x86_64) build → build/AgentIsland.app
+git clone https://github.com/tristan666666/agent-island.git
+cd agent-island
+./build.sh
 open build/AgentIsland.app
 ```
 
-macOS 13+. Auto-update (Sparkle) is disabled in this build (`SU_FEED_URL` empty).
+macOS 13+. Universal binary (Apple Silicon + Intel). Auto-update is off in this build.
 
-## How Auto-Trigger fires
+## How it works
 
-The app already fetches the real reset time from each provider's usage API. When `fiveHour.resetAt` advances, the window has reset, and the engine runs:
-
-- Claude: `claude --resume <session> -p "<message>" --dangerously-skip-permissions`
-- Codex: `codex exec resume <session> "<message>" --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check`
-
-Run logs land in `~/Library/Application Support/AgentIsland/trigger-runs/`. Note: the Mac must be awake for a trigger to fire, and each fire spends tokens.
+- **Reset times** come from each provider's real usage API.
+- **Session state** is read from the transcript files: mtime (is it still producing output?) plus the turn-complete markers — Claude's `stop_reason: end_turn`, Codex's `task_complete` event.
+- **Resume** runs `claude --resume … -p "<msg>" --dangerously-skip-permissions` or `codex exec resume … "<msg>" --dangerously-bypass-approvals-and-sandbox`. Run logs land in `~/Library/Application Support/AgentIsland/trigger-runs/`.
+- The Mac must be awake for a trigger to fire, and each fire spends tokens.
 
 ## Credits & license
 
-Agent Island is a fork of **[codex-island](https://github.com/ericjypark/codex-island)** by **Eric Park**, with the Auto-Trigger feature added and the project rebranded. The original usage-island and cost-tracking work is his.
+Agent Island is a fork of **[codex-island](https://github.com/ericjypark/codex-island)** by **Eric Park** — the usage-island and cost-tracking foundation are his work. Agent Island adds the auto-trigger watchman and the live session-state animations, and rebrands the project.
 
-MIT licensed — see [LICENSE](LICENSE) (Copyright © 2026 Eric Park). This fork retains that copyright notice as required.
+MIT licensed — © 2026 Eric Park. This fork retains that notice. See [LICENSE](LICENSE).
