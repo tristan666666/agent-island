@@ -2,14 +2,13 @@ import Foundation
 import AppKit
 
 /// Watches active Claude and Codex sessions and classifies each provider's
-/// live state, so the island can react: a breathing logo while working, a spin
-/// when a turn finishes (your turn), and a red alarm + beep when a session has
-/// frozen mid-turn (stalled).
+/// live state for the island: breathing while working, a spin when a turn
+/// finishes (your turn), red + beep when a session froze mid-turn (stalled).
 ///
-/// Stall detection is deliberately conservative: a session is only ever marked
-/// stalled if we watched it go from actively producing to frozen mid-turn,
-/// within a bounded window. Sessions that were already quiet (old / abandoned /
-/// never observed working) never flash red — that was the confusing case.
+/// Conservative on purpose: a session only ever goes red if we *watched* it go
+/// from actively producing to frozen mid-turn, and stayed frozen past a long
+/// threshold. Sessions that were already quiet (old / abandoned / mid long
+/// tool call) don't flash red. All disk IO runs off the main actor.
 @MainActor
 final class ActivityMonitor: ObservableObject {
     static let shared = ActivityMonitor()
@@ -24,15 +23,8 @@ final class ActivityMonitor: ObservableObject {
         provider == .claude ? claude : codex
     }
 
-    private let activeWindow: TimeInterval = 18      // file grew within → working
-    private let stallAfter: TimeInterval = 180       // frozen mid-turn this long → stalled
-    private let stallCap: TimeInterval = 12 * 60     // beyond this, it's idle, not an active stall
-    private let needsYouCap: TimeInterval = 20 * 60  // "your turn" only stays fresh this long
-    private let attentionWindow: TimeInterval = 30 * 60
-
-    /// path → last time we saw the transcript actively growing. A session is
-    /// only "stalled" if it's in here (we watched it work) and then froze.
     private var lastWorking: [String: Date] = [:]
+    private var lastBeepAt: Date?
     private var timer: Timer?
 
     func start() {
@@ -42,45 +34,88 @@ final class ActivityMonitor: ObservableObject {
         }
     }
 
+    /// Snapshot state, do all the file IO + classification on a background
+    /// task, then hop back to assign published state + beep.
     private func tick() {
+        let snapshot = lastWorking
         let now = Date()
-        let c = aggregate(scan(files: claudeFiles(), now: now, turnDone: claudeTurnDone))
-        if c == .stalled && claude != .stalled { beep() }
-        claude = c
-
-        let x = aggregate(scan(files: codexFiles(now: now), now: now, turnDone: codexTurnDone))
-        if x == .stalled && codex != .stalled { beep() }
-        codex = x
+        Task.detached(priority: .utility) {
+            let result = Scan.run(lastWorking: snapshot, now: now)
+            await MainActor.run {
+                self.lastWorking = result.lastWorking
+                if result.claude == .stalled && self.claude != .stalled { self.beep() }
+                self.claude = result.claude
+                if result.codex == .stalled && self.codex != .stalled { self.beep() }
+                self.codex = result.codex
+            }
+        }
     }
 
-    private func aggregate(_ states: [State]) -> State {
+    private func beep() {
+        guard StallSoundStore.shared.enabled else { return }
+        if let last = lastBeepAt, Date().timeIntervalSince(last) < 30 { return }   // throttle
+        lastBeepAt = Date()
+        NSSound.beep()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { NSSound.beep() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.56) { NSSound.beep() }
+    }
+}
+
+/// Pure, off-actor scan: no shared mutable state beyond the `lastWorking`
+/// snapshot it's handed and returns.
+private enum Scan {
+    struct Result {
+        let claude: ActivityMonitor.State
+        let codex: ActivityMonitor.State
+        let lastWorking: [String: Date]
+    }
+
+    static let activeWindow: TimeInterval = 18       // file grew within → working
+    static let stallAfter: TimeInterval = 300        // frozen mid-turn 5 min → stalled
+    static let stallCap: TimeInterval = 15 * 60      // beyond this it's idle, not a live stall
+    static let needsYouCap: TimeInterval = 20 * 60   // "your turn" only stays fresh this long
+    static let attentionWindow: TimeInterval = 30 * 60
+
+    static func run(lastWorking: [String: Date], now: Date) -> Result {
+        var lw = lastWorking
+        let claudeF = claudeFiles()
+        let codexF = codexFiles(now: now)
+        let c = aggregate(classifyAll(claudeF, now: now, lw: &lw, turnDone: claudeTurnDone))
+        let x = aggregate(classifyAll(codexF, now: now, lw: &lw, turnDone: codexTurnDone))
+        // Prune: only keep entries for files we still consider candidates, so
+        // the dictionary can't grow without bound across a long-running app.
+        let live = Set(claudeF + codexF)
+        lw = lw.filter { live.contains($0.key) }
+        return Result(claude: c, codex: x, lastWorking: lw)
+    }
+
+    private static func aggregate(_ states: [ActivityMonitor.State]) -> ActivityMonitor.State {
         states.max(by: { $0.rawValue < $1.rawValue }) ?? .idle
     }
 
-    private func scan(files: [String], now: Date, turnDone: ([String]) -> Bool) -> [State] {
-        var out: [State] = []
+    private static func classifyAll(_ files: [String], now: Date, lw: inout [String: Date],
+                                    turnDone: ([String]) -> Bool) -> [ActivityMonitor.State] {
+        var out: [ActivityMonitor.State] = []
         for path in files {
             guard let m = mtime(path) else { continue }
             let age = now.timeIntervalSince(m)
-            if age > attentionWindow { lastWorking[path] = nil; continue }
-            out.append(classify(path: path, age: age, turnDone: turnDone, now: now))
+            if age > attentionWindow { continue }
+            out.append(classify(path: path, age: age, now: now, lw: &lw, turnDone: turnDone))
         }
         return out
     }
 
-    private func classify(path: String, age: TimeInterval, turnDone: ([String]) -> Bool, now: Date) -> State {
+    private static func classify(path: String, age: TimeInterval, now: Date,
+                                 lw: inout [String: Date], turnDone: ([String]) -> Bool) -> ActivityMonitor.State {
         if age < activeWindow {
-            lastWorking[path] = now
+            lw[path] = now
             return .working
         }
-        // Stopped. Finished its turn, or frozen mid-turn?
         if turnDone(tailLines(path)) {
             return age < needsYouCap ? .needsYou : .idle
         }
-        if age < stallAfter { return .working }   // brief mid-turn pause — still thinking
-        // Frozen mid-turn. Only "stalled" if we actually watched it working and
-        // it's still within the active-stall window; otherwise it's just idle.
-        if let seen = lastWorking[path], now.timeIntervalSince(seen) < stallCap, age < stallCap {
+        if age < stallAfter { return .working }   // brief mid-turn pause / slow tool — still working
+        if let seen = lw[path], now.timeIntervalSince(seen) < stallCap, age < stallCap {
             return .stalled
         }
         return .idle
@@ -88,7 +123,7 @@ final class ActivityMonitor: ObservableObject {
 
     // MARK: - Candidate files
 
-    private func claudeFiles() -> [String] {
+    private static func claudeFiles() -> [String] {
         let fm = FileManager.default
         let root = NSHomeDirectory() + "/.claude/projects"
         guard let projects = try? fm.contentsOfDirectory(atPath: root) else { return [] }
@@ -101,7 +136,7 @@ final class ActivityMonitor: ObservableObject {
         return files
     }
 
-    private func codexFiles(now: Date) -> [String] {
+    private static func codexFiles(now: Date) -> [String] {
         let cal = Calendar.current
         var files: [String] = []
         for offset in 0...1 {
@@ -117,10 +152,7 @@ final class ActivityMonitor: ObservableObject {
 
     // MARK: - Turn markers
 
-    /// Verdict from the last ASSISTANT entry only. Trailing user / system /
-    /// queue lines (injected reminders, queued prompts) are noise and must not
-    /// flip a finished turn into a false stall.
-    private func claudeTurnDone(_ lines: [String]) -> Bool {
+    private static func claudeTurnDone(_ lines: [String]) -> Bool {
         for line in lines.reversed() {
             guard let object = json(line), object["type"] as? String == "assistant" else { continue }
             let stop = (object["message"] as? [String: Any])?["stop_reason"] as? String
@@ -129,7 +161,7 @@ final class ActivityMonitor: ObservableObject {
         return false
     }
 
-    private func codexTurnDone(_ lines: [String]) -> Bool {
+    private static func codexTurnDone(_ lines: [String]) -> Bool {
         for line in lines.reversed() {
             guard let object = json(line), object["type"] as? String == "event_msg",
                   let type = (object["payload"] as? [String: Any])?["type"] as? String else { continue }
@@ -139,9 +171,11 @@ final class ActivityMonitor: ObservableObject {
         return false
     }
 
-    // MARK: - Helpers
+    // MARK: - IO helpers
 
-    private func tailLines(_ path: String, bytes: UInt64 = 65_536, keep: Int = 60) -> [String] {
+    /// Last ~128KB / 200 lines — wide enough that a recent turn-complete marker
+    /// isn't scrolled out by a burst of tool output.
+    private static func tailLines(_ path: String, bytes: UInt64 = 131_072, keep: Int = 200) -> [String] {
         guard let handle = FileHandle(forReadingAtPath: path) else { return [] }
         defer { try? handle.close() }
         let size = (try? handle.seekToEnd()) ?? 0
@@ -150,19 +184,12 @@ final class ActivityMonitor: ObservableObject {
         return Array(String(decoding: data, as: UTF8.self).split(separator: "\n").map(String.init).suffix(keep))
     }
 
-    private func json(_ line: String) -> [String: Any]? {
+    private static func json(_ line: String) -> [String: Any]? {
         guard let data = line.data(using: .utf8) else { return nil }
         return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
     }
 
-    private func mtime(_ path: String) -> Date? {
+    private static func mtime(_ path: String) -> Date? {
         (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate]) as? Date
-    }
-
-    private func beep() {
-        guard StallSoundStore.shared.enabled else { return }
-        NSSound.beep()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { NSSound.beep() }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.56) { NSSound.beep() }
     }
 }

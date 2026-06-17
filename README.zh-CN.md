@@ -74,6 +74,7 @@ macOS 13+，通用二进制（Apple 芯片 + Intel）。此构建已关闭自动
 - **会话状态**从记录文件读：文件 mtime（还在产出吗）+ 轮次完成标记 —— Claude 的 `stop_reason: end_turn`、Codex 的 `task_complete` 事件。
 - **续跑**执行 `claude --resume … -p "<消息>"` 或 `codex exec resume … "<消息>"`，运行日志在 `~/Library/Application Support/AgentIsland/trigger-runs/`。
 - 触发需要 Mac 醒着；每次触发都会消耗 token。
+- ⚠️ 续跑会**无人值守、关掉权限确认**地恢复 agent(上面那些 `--dangerously-*` 参数)。只给你信任的会话挂触发器。全程在本机以你的身份运行,不外传任何东西。
 
 ## 致谢与许可
 

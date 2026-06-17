@@ -74,6 +74,7 @@ macOS 13+. Universal binary (Apple Silicon + Intel). Auto-update is off in this 
 - **Session state** is read from the transcript files: mtime (is it still producing output?) plus the turn-complete markers — Claude's `stop_reason: end_turn`, Codex's `task_complete` event.
 - **Resume** runs `claude --resume … -p "<msg>" --dangerously-skip-permissions` or `codex exec resume … "<msg>" --dangerously-bypass-approvals-and-sandbox`. Run logs land in `~/Library/Application Support/AgentIsland/trigger-runs/`.
 - The Mac must be awake for a trigger to fire, and each fire spends tokens.
+- ⚠️ A trigger resumes the agent **unattended with permission checks off** (the `--dangerously-*` flags above). Only attach triggers to sessions you trust. Everything runs locally as you; nothing is sent anywhere.
 
 ## Credits & license
 

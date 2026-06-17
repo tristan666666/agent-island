@@ -8,7 +8,7 @@ EdDSA signature so a hijacked URL alone can't deliver malware.
 
 The feed URL is:
 ```
-https://github.com/ericjypark/codex-island/releases/latest/download/appcast.xml
+https://github.com/tristan666666/agent-island/releases/latest/download/appcast.xml
 ```
 GitHub's `releases/latest/download/<asset>` endpoint always 302-redirects to
 the asset on the most recent non-prerelease release.
@@ -34,7 +34,7 @@ the asset on the most recent non-prerelease release.
    ```
    Open the file, copy its contents, and paste them into a new GitHub Actions
    secret named `SPARKLE_ED_PRIVATE_KEY` at
-   `https://github.com/ericjypark/codex-island/settings/secrets/actions`.
+   `https://github.com/tristan666666/agent-island/settings/secrets/actions`.
    Then **delete the file** — never commit it.
 
 The private key never leaves your Mac (and CI's runner). Lose it and existing

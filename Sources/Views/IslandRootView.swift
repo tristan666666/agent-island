@@ -474,7 +474,14 @@ private struct LogoOverlay: View {
                 .animation(pulseAnimation, value: pulse)
                 .animation(.easeInOut(duration: 0.3), value: st)
                 .onAppear { pulse = true; updateSpin(st) }
-                .onChange(of: st) { updateSpin($0) }
+                .onChange(of: st) { newState in
+                    // Re-arm the pulse so the new state's animation curve (e.g.
+                    // the fast red stalled pulse) actually takes effect — the
+                    // .animation(_, value: pulse) modifier needs pulse to change.
+                    pulse = false
+                    DispatchQueue.main.async { pulse = true }
+                    updateSpin(newState)
+                }
                 .accessibilityLabel(isVisible ? providerLabel : L10n.tr("%@ (hidden)", providerLabel))
                 .accessibilityHidden(!isVisible)
         }
