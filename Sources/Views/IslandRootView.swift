@@ -444,6 +444,8 @@ private struct LogoOverlay: View {
     let topPadding: CGFloat
 
     @ObservedObject private var visibility = ProviderVisibilityStore.shared
+    @ObservedObject private var monitor = ActivityMonitor.shared
+    @State private var pulse = false
 
     var body: some View {
         // Hidden providers fully drop out — header / peek pill / chrome
@@ -457,14 +459,57 @@ private struct LogoOverlay: View {
                 .resizable()
                 .renderingMode(.template)
                 .aspectRatio(contentMode: .fit)
-                .foregroundStyle(color)
+                // Stalled overrides the brand tint with an alarm red; other
+                // states keep the provider color and signal via pulse + glow.
+                .foregroundStyle(st == .stalled ? Self.alarmRed : color)
                 .frame(width: 20, height: 20)
+                .scaleEffect(scale)
+                .shadow(color: glowColor.opacity(pulse ? 0.9 : 0.25), radius: glowRadius)
                 .padding(provider == .claude ? .leading : .trailing, edgePadding)
                 .padding(.top, topPadding)
                 .opacity(isVisible ? 1 : 0)
                 .animation(.openMorph, value: isVisible)
+                .animation(pulseAnimation, value: pulse)
+                .animation(.easeInOut(duration: 0.3), value: st)
+                .onAppear { pulse = true }
                 .accessibilityLabel(isVisible ? providerLabel : L10n.tr("%@ (hidden)", providerLabel))
                 .accessibilityHidden(!isVisible)
+        }
+    }
+
+    private static let alarmRed = Color(red: 0.96, green: 0.34, blue: 0.29)
+
+    /// Live state for this provider — idle when the provider is hidden.
+    private var st: ActivityMonitor.State {
+        isVisible ? monitor.state(for: provider) : .idle
+    }
+
+    private var scale: CGFloat {
+        switch st {
+        case .idle:     return 1.0
+        case .working:  return pulse ? 1.05 : 1.0
+        case .needsYou: return pulse ? 1.13 : 1.0
+        case .stalled:  return pulse ? 1.16 : 1.0
+        }
+    }
+
+    private var glowColor: Color { st == .stalled ? Self.alarmRed : color }
+
+    private var glowRadius: CGFloat {
+        switch st {
+        case .idle:     return 0
+        case .working:  return pulse ? 5 : 2
+        case .needsYou: return pulse ? 9 : 3
+        case .stalled:  return pulse ? 11 : 4
+        }
+    }
+
+    private var pulseAnimation: Animation {
+        switch st {
+        case .idle:     return .easeOut(duration: 0.3)
+        case .working:  return .easeInOut(duration: 1.7).repeatForever(autoreverses: true)
+        case .needsYou: return .easeInOut(duration: 0.75).repeatForever(autoreverses: true)
+        case .stalled:  return .easeInOut(duration: 0.42).repeatForever(autoreverses: true)
         }
     }
 

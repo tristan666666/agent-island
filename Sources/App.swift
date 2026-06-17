@@ -51,6 +51,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // session. Started after the usage store for the same reason.
         TriggerEngine.shared.start()
 
+        // Activity monitor drives the provider-logo states (working / your-turn
+        // / stalled) by watching transcript progress.
+        ActivityMonitor.shared.start()
+
         // Touch the shared updater so Sparkle starts its background scheduler.
         _ = UpdaterController.shared
     }
