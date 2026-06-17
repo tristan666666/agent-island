@@ -1,14 +1,15 @@
 import SwiftUI
 
-/// Settings tab for auto-triggers. Pick any Claude or Codex session, set a
-/// message, and choose when it fires — at the provider's real 5h-window reset
-/// (the same signal the island already tracks) or on a fixed interval.
+/// Settings tab for auto-triggers. Choose a tool (Claude or Codex), pick one of
+/// its active threads, set a message, and choose when it fires — at the real
+/// 5h-window reset (the signal the island already tracks) or a fixed interval.
 struct TriggerSettingsView: View {
     @ObservedObject private var store = TriggerStore.shared
     @ObservedObject private var usage = UsageStore.shared
 
-    @State private var sessions: [ScannedSession] = []
+    @State private var allSessions: [ScannedSession] = []
     @State private var scanning = false
+    @State private var tool: TriggerTool = .claude
     @State private var selectedID: String?
     @State private var message = "继续"
     @State private var mode: TriggerMode = .afterReset
@@ -21,6 +22,10 @@ struct TriggerSettingsView: View {
         return f
     }()
 
+    private var toolSessions: [ScannedSession] {
+        allSessions.filter { $0.tool == tool }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
@@ -30,7 +35,7 @@ struct TriggerSettingsView: View {
         .padding(.horizontal, 14)
         .padding(.top, 18)
         .padding(.bottom, 16)
-        .task { if sessions.isEmpty { await loadSessions() } }
+        .task { if allSessions.isEmpty { await loadSessions() } }
     }
 
     // MARK: - Header / intro
@@ -47,7 +52,7 @@ struct TriggerSettingsView: View {
         .padding(.bottom, 10)
     }
 
-    // MARK: - Existing triggers
+    // MARK: - Existing triggers (grouped by tool)
 
     @ViewBuilder
     private var existingList: some View {
@@ -58,27 +63,34 @@ struct TriggerSettingsView: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 10)
         } else {
-            VStack(spacing: 0) {
-                ForEach(store.triggers) { trigger in
-                    SettingsRow(
-                        title: trigger.label,
-                        subtitle: subtitle(trigger),
-                        dot: color(trigger.tool),
-                        chip: trigger.tool.display.uppercased()
-                    ) {
-                        HStack(spacing: 8) {
-                            PillButton(label: "Run") { TriggerEngine.shared.fire(trigger) }
-                            SettingsToggle(isOn: trigger.enabled) {
-                                store.setEnabled(trigger.id, !trigger.enabled)
-                            }
-                            Button { store.remove(trigger.id) } label: {
-                                Image(systemName: "trash")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.white.opacity(0.36))
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(L10n.tr("Delete trigger"))
+            VStack(alignment: .leading, spacing: 4) {
+                groupRows(.claude)
+                groupRows(.codex)
+            }
+            .padding(.bottom, 4)
+        }
+    }
+
+    @ViewBuilder
+    private func groupRows(_ forTool: TriggerTool) -> some View {
+        let rows = store.triggers.filter { $0.tool == forTool }
+        if !rows.isEmpty {
+            Text(forTool.display.uppercased())
+                .font(Typography.chip)
+                .tracking(1.0)
+                .foregroundStyle(color(forTool).opacity(0.85))
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+            ForEach(rows) { trigger in
+                SettingsRow(title: trigger.label, subtitle: subtitle(trigger)) {
+                    HStack(spacing: 8) {
+                        PillButton(label: "Run") { TriggerEngine.shared.fire(trigger) }
+                        SettingsToggle(isOn: trigger.enabled) { store.setEnabled(trigger.id, !trigger.enabled) }
+                        Button { store.remove(trigger.id) } label: {
+                            Image(systemName: "trash").font(.system(size: 11)).foregroundStyle(.white.opacity(0.36))
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(L10n.tr("Delete trigger"))
                     }
                 }
             }
@@ -89,16 +101,25 @@ struct TriggerSettingsView: View {
 
     private var addCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("New trigger")
-                .padding(.top, 14)
+            sectionLabel("New trigger").padding(.top, 14)
             VStack(alignment: .leading, spacing: 13) {
-                field("Session") {
+                field("Tool") {
+                    SegmentedControl(
+                        items: TriggerTool.allCases,
+                        selected: $tool,
+                        label: { $0.display },
+                        accessibilityPrefix: "Tool"
+                    )
+                    .onChange(of: tool) { _ in selectFirst() }
+                }
+
+                field("Thread") {
                     Picker("", selection: $selectedID) {
-                        if sessions.isEmpty {
-                            Text(L10n.tr(scanning ? "Scanning…" : "No sessions")).tag(String?.none)
+                        if toolSessions.isEmpty {
+                            Text(L10n.tr(scanning ? "Scanning…" : "No active threads")).tag(String?.none)
                         }
-                        ForEach(sessions) { session in
-                            Text("\(session.tool.display) · \(session.label)").tag(Optional(session.id))
+                        ForEach(toolSessions) { session in
+                            Text(session.label).tag(Optional(session.id))
                         }
                     }
                     .labelsHidden()
@@ -172,21 +193,19 @@ struct TriggerSettingsView: View {
 
     // MARK: - Helpers
 
-    private var selectedTool: TriggerTool? {
-        guard let id = selectedID else { return nil }
-        return sessions.first(where: { $0.id == id })?.tool
-    }
-
     private var resetCaption: String? {
-        guard let tool = selectedTool else { return nil }
         let reset = (tool == .claude ? usage.claude : usage.codex).fiveHour.resetAt
         guard let reset else { return L10n.tr("%@: reset time loads with usage data.", tool.display) }
         return L10n.tr("%@ resets %@", tool.display, Self.rel.localizedString(for: reset, relativeTo: Date()))
     }
 
+    private func selectFirst() {
+        selectedID = toolSessions.first?.id
+    }
+
     private func addTrigger() {
         guard let id = selectedID,
-              let session = sessions.first(where: { $0.id == id }) else { return }
+              let session = allSessions.first(where: { $0.id == id }) else { return }
         store.add(Trigger(
             tool: session.tool,
             sessionId: session.sessionId,
@@ -203,8 +222,10 @@ struct TriggerSettingsView: View {
     private func loadSessions() async {
         scanning = true
         let found = await Task.detached(priority: .userInitiated) { SessionScanner.scan() }.value
-        sessions = found
-        if selectedID == nil { selectedID = found.first?.id }
+        allSessions = found
+        if selectedID == nil || allSessions.first(where: { $0.id == selectedID }) == nil {
+            selectFirst()
+        }
         scanning = false
     }
 

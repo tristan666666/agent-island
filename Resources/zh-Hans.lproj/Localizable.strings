@@ -168,3 +168,6 @@
 "fired %@" = "上次 %@";
 "%@ resets %@" = "%@ 将于 %@ 重置";
 "%@: reset time loads with usage data." = "%@：重置时间随用量数据一起加载。";
+"Tool" = "工具";
+"Thread" = "线程";
+"No active threads" = "无活跃线程";

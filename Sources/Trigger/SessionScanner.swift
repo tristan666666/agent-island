@@ -4,70 +4,57 @@ import Foundation
 struct ScannedSession: Identifiable, Hashable {
     var id: String { tool.rawValue + ":" + sessionId }
     let tool: TriggerTool
-    let sessionId: String
+    let sessionId: String   // the id passed to `--resume` / `exec resume`
     let cwd: String
-    let label: String
+    let label: String       // clean display name
     let modified: Date
 }
 
-/// Discovers Claude Code and Codex sessions from their on-disk transcript
-/// stores so a trigger can target any thread of either tool. Pure file IO —
-/// call off the main thread.
+/// Discovers active Claude and Codex sessions. Claude names + archived state
+/// come from the Claude desktop session store (so the picker shows real thread
+/// titles like "MiniMax GEO project" and skips archived threads). Codex has no
+/// titled store, so we fall back to the project folder name, one per project.
 enum SessionScanner {
-    static func scan(limitPerTool: Int = 30) -> [ScannedSession] {
-        var out = scanClaude(limit: limitPerTool)
-        out += scanCodex(limit: limitPerTool)
+    static func scan() -> [ScannedSession] {
+        var out = scanClaude()
+        out += scanCodex()
         out.sort { $0.modified > $1.modified }
         return out
     }
 
-    // MARK: - Claude: ~/.claude/projects/<slug>/<session-uuid>.jsonl
+    // MARK: - Claude: desktop session store (titles + archived flag)
 
-    private static func scanClaude(limit: Int) -> [ScannedSession] {
+    private static func scanClaude() -> [ScannedSession] {
         let fm = FileManager.default
-        let root = NSHomeDirectory() + "/.claude/projects"
-        guard let projects = try? fm.contentsOfDirectory(atPath: root) else { return [] }
-        var files: [String] = []
-        for project in projects {
-            let dir = root + "/" + project
-            guard let entries = try? fm.contentsOfDirectory(atPath: dir) else { continue }
-            for entry in entries where entry.hasSuffix(".jsonl") {
-                files.append(dir + "/" + entry)
-            }
-        }
-        files.sort { mtime($0) > mtime($1) }
-        return files.prefix(limit).map { path in
-            let sid = (path as NSString).lastPathComponent
-                .replacingOccurrences(of: ".jsonl", with: "")
-            let (cwd, label) = claudeMeta(path)
-            return ScannedSession(
+        let root = NSHomeDirectory() + "/Library/Application Support/Claude/claude-code-sessions"
+        guard let enumerator = fm.enumerator(atPath: root) else { return [] }
+        var out: [ScannedSession] = []
+        for case let rel as String in enumerator
+        where rel.hasSuffix(".json") && (rel as NSString).lastPathComponent.hasPrefix("local_") {
+            let path = root + "/" + rel
+            guard let data = fm.contents(atPath: path),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else { continue }
+            // Skip archived threads — the picker only lists active ones.
+            if object["isArchived"] as? Bool == true { continue }
+            guard let resume = object["cliSessionId"] as? String, !resume.isEmpty else { continue }
+            let cwd = object["cwd"] as? String ?? ""
+            let title = object["title"] as? String ?? ""
+            let ms = (object["lastActivityAt"] as? Double) ?? (object["createdAt"] as? Double) ?? 0
+            out.append(ScannedSession(
                 tool: .claude,
-                sessionId: sid,
+                sessionId: resume,
                 cwd: cwd,
-                label: label.isEmpty ? fallbackLabel(cwd, sid) : label,
-                modified: mtime(path)
-            )
+                label: title.isEmpty ? fallback(cwd, resume) : title,
+                modified: Date(timeIntervalSince1970: ms / 1000)
+            ))
         }
+        return out
     }
 
-    private static func claudeMeta(_ path: String) -> (cwd: String, label: String) {
-        var cwd = "", label = ""
-        for line in headLines(path) {
-            guard let object = jsonObject(line) else { continue }
-            if cwd.isEmpty, let c = object["cwd"] as? String { cwd = c }
-            if label.isEmpty,
-               object["type"] as? String == "user",
-               let message = object["message"] as? [String: Any] {
-                label = extractText(message["content"])
-            }
-            if !cwd.isEmpty && !label.isEmpty { break }
-        }
-        return (cwd, label)
-    }
+    // MARK: - Codex: ~/.codex/sessions, one entry per project folder
 
-    // MARK: - Codex: ~/.codex/sessions/Y/M/D/rollout-<ts>-<uuid>.jsonl
-
-    private static func scanCodex(limit: Int) -> [ScannedSession] {
+    private static func scanCodex(limit: Int = 30) -> [ScannedSession] {
         let fm = FileManager.default
         let root = NSHomeDirectory() + "/.codex/sessions"
         guard let enumerator = fm.enumerator(atPath: root) else { return [] }
@@ -76,78 +63,43 @@ enum SessionScanner {
             files.append(root + "/" + rel)
         }
         files.sort { mtime($0) > mtime($1) }
-        return files.prefix(limit).compactMap { codexSession($0) }
+        var out: [ScannedSession] = []
+        var seenProjects = Set<String>()
+        for path in files {
+            guard let (sid, cwd) = codexMeta(path), !sid.isEmpty else { continue }
+            let projectKey = cwd.isEmpty ? sid : cwd
+            if seenProjects.contains(projectKey) { continue }
+            seenProjects.insert(projectKey)
+            out.append(ScannedSession(
+                tool: .codex,
+                sessionId: sid,
+                cwd: cwd,
+                label: cwd.isEmpty ? String(sid.prefix(8)) : (cwd as NSString).lastPathComponent,
+                modified: mtime(path)
+            ))
+            if out.count >= limit { break }
+        }
+        return out
     }
 
-    private static func codexSession(_ path: String) -> ScannedSession? {
-        var sid = "", cwd = "", label = ""
-        for line in headLines(path) {
-            guard let object = jsonObject(line) else { continue }
-            let type = object["type"] as? String
-            if type == "session_meta", let payload = object["payload"] as? [String: Any] {
-                if let id = payload["id"] as? String { sid = id }
-                if let c = payload["cwd"] as? String { cwd = c }
-            }
-            if label.isEmpty,
-               type == "response_item",
-               let payload = object["payload"] as? [String: Any],
-               payload["type"] as? String == "message",
-               payload["role"] as? String == "user" {
-                label = extractText(payload["content"])
-            }
-            if !sid.isEmpty && !cwd.isEmpty && !label.isEmpty { break }
+    private static func codexMeta(_ path: String) -> (String, String)? {
+        guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
+        defer { try? handle.close() }
+        let data = (try? handle.read(upToCount: 16_384)) ?? Data()
+        for line in String(decoding: data, as: UTF8.self).split(separator: "\n") {
+            guard let lineData = line.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+                  object["type"] as? String == "session_meta",
+                  let payload = object["payload"] as? [String: Any]
+            else { continue }
+            return (payload["id"] as? String ?? "", payload["cwd"] as? String ?? "")
         }
-        guard !sid.isEmpty else { return nil }
-        return ScannedSession(
-            tool: .codex,
-            sessionId: sid,
-            cwd: cwd,
-            label: label.isEmpty ? fallbackLabel(cwd, sid) : label,
-            modified: mtime(path)
-        )
+        return nil
     }
 
     // MARK: - Helpers
 
-    /// Read only the first chunk — session metadata and the first user message
-    /// live near the top, and some Claude transcripts are tens of MB.
-    private static func headLines(_ path: String, bytes: Int = 131_072) -> [Substring] {
-        guard let handle = FileHandle(forReadingAtPath: path) else { return [] }
-        defer { try? handle.close() }
-        let data = (try? handle.read(upToCount: bytes)) ?? Data()
-        guard !data.isEmpty else { return [] }
-        let text = String(decoding: data, as: UTF8.self)
-        return text.split(separator: "\n")
-    }
-
-    private static func jsonObject(_ line: Substring) -> [String: Any]? {
-        guard let data = line.data(using: .utf8) else { return nil }
-        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-    }
-
-    private static func extractText(_ content: Any?) -> String {
-        if let string = content as? String { return clean(string) }
-        if let parts = content as? [[String: Any]] {
-            for part in parts {
-                let type = part["type"] as? String ?? ""
-                if type == "text" || type == "input_text", let text = part["text"] as? String {
-                    let cleaned = clean(text)
-                    if !cleaned.isEmpty { return cleaned }
-                }
-            }
-        }
-        return ""
-    }
-
-    /// Drops tool/system-injected blocks (which start with a tag like
-    /// `<command…>` or `#` AGENTS preambles) so labels read like real prompts.
-    private static func clean(_ raw: String) -> String {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, !trimmed.hasPrefix("<"), !trimmed.hasPrefix("#") else { return "" }
-        return String(trimmed.prefix(60))
-    }
-
-    private static func fallbackLabel(_ cwd: String, _ sid: String) -> String {
+    private static func fallback(_ cwd: String, _ sid: String) -> String {
         let base = (cwd as NSString).lastPathComponent
         return base.isEmpty ? String(sid.prefix(8)) : base
     }

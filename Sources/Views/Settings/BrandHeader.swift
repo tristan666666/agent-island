@@ -50,13 +50,12 @@ struct BrandHeader: View {
     private var mark: some View {
         if let logo {
             Image(nsImage: logo)
-                .renderingMode(.template)
+                .renderingMode(.original)
                 .resizable()
                 .interpolation(.high)
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 26, height: 26)
-                .foregroundStyle(.white.opacity(0.92))
-                .shadow(color: IslandColor.cobalt.opacity(0.35), radius: 6)
+                .shadow(color: .black.opacity(0.4), radius: 5)
         } else {
             // Fallback if the resource is missing in the bundle: a plain
             // cobalt-glowing dot so the header layout doesn't collapse.
