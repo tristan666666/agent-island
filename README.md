@@ -2,7 +2,7 @@
 
 # Agent Island
 
-**Your AI night-watch — keeps your Claude & Codex agents running.**
+**Your AI night-watch — auto-resume long Claude/Codex runs and see live state in the notch.**
 
 [简体中文](README.zh-CN.md)
 
@@ -10,23 +10,22 @@
 
 </div>
 
-Agent Island lives in your MacBook notch. It isn't just a usage meter — it **watches your Claude Code and Codex sessions and acts on them**: resumes them when you hit the 5-hour limit, tells you the moment a turn finishes, and alarms when one stalls.
+Agent Island lives in your MacBook notch. It is a small native macOS companion for long Claude Code and Codex runs: it can **auto-resume a chosen session when it can continue**, and it shows each session's live state right on the provider logo.
 
 ## Why
 
-Heavy Claude / Codex use has three quiet time-sinks:
+Heavy Claude / Codex use has two quiet time-sinks:
 
-- You hit the **5-hour limit** mid-task and it dies until you come back.
-- A session **stalls** (stuck tool, waiting on input, dead network) and sits idle for half an hour.
-- A session **finishes** while you're away and you never notice it's your turn.
+- A long-running task pauses while you're away, and you have to come back just to type `continue`.
+- You cannot tell at a glance whether a session is still running, waiting for you, or stuck.
 
-Agent Island handles all three, from the notch.
+Agent Island handles both from the notch. Usage and reset timing are there to help you plan work precisely; they are not the product's main point.
 
 ## Features
 
-### 🌙 Auto-resume after reset — the night-watch
+### 🌙 Auto-resume long runs — the night-watch
 
-When your 5-hour window resets, Agent Island auto-sends a message (`继续`, `OK`, whatever you set) to a chosen Claude or Codex session so the task keeps going — no babysitting. Set it up in **Settings → 自动触发**, or run on a fixed every-N-hours schedule. It fires at the *real* reset instant, read from each provider's usage API.
+Agent Island can auto-send a message (`继续`, `OK`, whatever you set) to a chosen Claude or Codex session so the task keeps going — no babysitting. You can trigger it from the provider's real reset timing, or run it on a fixed every-N-hours schedule in **Settings → 自动触发**.
 
 ### ⚡ Live session state, on your logos
 
@@ -49,13 +48,13 @@ Codex Island is a **passive meter** — it shows your usage. Agent Island is **a
 | | Codex Island | Agent Island |
 |---|:---:|:---:|
 | Usage / cost / reset in the notch | ✅ | ✅ *(inherited)* |
-| **Auto-resume** a session after the 5h limit resets | — | ✅ Claude & Codex |
+| **Auto-resume** a chosen long-running session | — | ✅ Claude & Codex |
 | **Logo reacts to session state** — breathe (working), spin (your turn), red + beep (stalled) | — | ✅ |
 | **Auto-Trigger** page inside the island | — | ✅ |
 | **Status-guide** settings tab (live legend + sound toggle) | — | ✅ |
 | Cross-tool session picker with real thread titles, archived filtered out | — | ✅ |
 
-In short: Codex Island tells you *how much you've used*; Agent Island makes sure *your agents keep running* — the night-watch.
+In short: Codex Island tells you *how much you've used*; Agent Island helps long-running agents keep moving and shows you their state — the night-watch.
 
 ## Install
 
