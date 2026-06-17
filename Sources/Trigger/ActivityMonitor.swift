@@ -26,9 +26,9 @@ final class ActivityMonitor: ObservableObject {
         return demoCodex ?? codex
     }
 
-    /// Demo override for filming the launch video — forces both logos to
-    /// `state` on the real notch (pass nil to return to live detection). Beeps
-    /// on stalled so the alarm can be captured on cue.
+    /// Demo override for previewing live states on the real notch (pass nil to
+    /// return to live detection). Beeps on stalled so the alarm behavior can be
+    /// checked on cue.
     func demo(_ state: State?) {
         demoClaude = state
         demoCodex = state
