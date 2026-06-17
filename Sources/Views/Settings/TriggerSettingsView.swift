@@ -31,6 +31,7 @@ struct TriggerSettingsView: View {
             header
             existingList
             addCard
+            statusGuide
         }
         .padding(.horizontal, 14)
         .padding(.top, 18)
@@ -188,6 +189,44 @@ struct TriggerSettingsView: View {
             .padding(14)
             .background { RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.03)) }
             .padding(.horizontal, 10)
+        }
+    }
+
+    // MARK: - Status guide
+
+    /// Plain-language legend for the logo animations, so anyone (friends
+    /// included) can read what the island is telling them.
+    private var statusGuide: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("Status guide").padding(.top, 16)
+            VStack(alignment: .leading, spacing: 9) {
+                legendRow("circle.fill", .white.opacity(0.65),
+                          "Working", "The agent is producing output — its logo gently breathes.")
+                legendRow("arrow.clockwise", IslandColor.claude,
+                          "Your turn", "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply.")
+                legendRow("exclamationmark.triangle.fill", Self.alarmRed,
+                          "Stalled", "A session froze mid-conversation — the logo turns red and beeps.")
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 4)
+        }
+    }
+
+    private static let alarmRed = Color(red: 0.96, green: 0.34, blue: 0.29)
+
+    @ViewBuilder
+    private func legendRow(_ symbol: String, _ tint: Color, _ title: String, _ desc: String) -> some View {
+        HStack(alignment: .top, spacing: 11) {
+            Image(systemName: symbol)
+                .font(.system(size: 12))
+                .foregroundStyle(tint)
+                .frame(width: 18, alignment: .center)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(L10n.tr(title)).font(Typography.label).foregroundStyle(.white.opacity(0.9))
+                Text(L10n.tr(desc)).font(Typography.micro).foregroundStyle(.white.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 

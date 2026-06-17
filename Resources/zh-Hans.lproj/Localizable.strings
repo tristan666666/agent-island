@@ -178,3 +178,12 @@
 "Manage" = "管理";
 "No triggers yet." = "还没有触发器。";
 "Add a trigger" = "新建触发器";
+
+/* Status guide (legend) */
+"Status guide" = "状态说明";
+"Working" = "正在跑";
+"The agent is producing output — its logo gently breathes." = "agent 正在产出、任务在跑 —— 对应 logo 缓慢呼吸。";
+"Your turn" = "该你了";
+"A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply." = "这一轮跑完了 —— logo 转圈（Claude 顺时针、Codex 逆时针），提醒你去回复。";
+"Stalled" = "卡住了";
+"A session froze mid-conversation — the logo turns red and beeps." = "对话中途卡住 / 中断了 —— logo 变红并哔哔提醒。";

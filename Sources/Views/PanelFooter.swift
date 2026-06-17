@@ -34,7 +34,9 @@ struct PanelFooter: View {
 
             ZStack(alignment: .center) {
                 HStack(spacing: 10) {
-                    chip
+                    // The chart-style chip ("阶梯" etc.) is noise on the first
+                    // (usage) page — keep that page clean, show it elsewhere.
+                    if screenPref.screen != .usage { chip }
 
                     if !activeStyleCycled {
                         HStack(spacing: 5) {
