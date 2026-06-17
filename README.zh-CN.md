@@ -6,12 +6,17 @@
 
 [English](README.md)
 
-<img src="Assets/agent-island-usage.png" alt="Agent Island 用量与重置视图" width="900">
-<img src="Assets/agent-island-auto-trigger.png" alt="Agent Island 自动触发会话视图" width="900">
+<img src="Assets/agent-island-auto-trigger.png" alt="Agent Island 自动续跑会话视图" width="900">
+<img src="Assets/agent-island-usage.png" alt="Agent Island 用量规划视图" width="900">
 
 </div>
 
-Agent Island 住在你 MacBook 的刘海里。它是给 Claude Code 和 Codex 长任务用的小工具：可以在任务能继续时**自动续跑指定会话**，也能把每个会话的实时状态直接显示在对应 logo 上。
+Agent Island 住在你 MacBook 的刘海里。它是给 Claude Code 和 Codex 长任务用的小工具：
+
+- 在任务能继续时，**自动续跑指定会话**。
+- 把每个会话的**实时状态**直接显示在对应 logo 上。
+
+用量和重置倒计时只是帮你规划任务；核心更简单：让长任务别无声停住，也让你不用打开每个终端才能知道状态。
 
 ## 为什么做它
 

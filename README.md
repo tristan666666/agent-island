@@ -6,12 +6,17 @@
 
 [简体中文](README.zh-CN.md)
 
-<img src="Assets/agent-island-usage.png" alt="Agent Island usage and reset view" width="900">
-<img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-trigger sessions view" width="900">
+<img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-resume sessions view" width="900">
+<img src="Assets/agent-island-usage.png" alt="Agent Island usage planning view" width="900">
 
 </div>
 
-Agent Island lives in your MacBook notch. It is a small native macOS companion for long Claude Code and Codex runs: it can **auto-resume a chosen session when it can continue**, and it shows each session's live state right on the provider logo.
+Agent Island lives in your MacBook notch. It is a small native macOS companion for long Claude Code and Codex runs:
+
+- **Auto-resume** a chosen session when it can continue.
+- Show each session's **live state** right on the provider logo.
+
+Usage and reset timing are included for planning, but the main point is simpler: keep long-running agents moving, and make their state visible without opening every terminal.
 
 ## Why
 
