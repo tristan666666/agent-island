@@ -6,7 +6,8 @@
 
 [简体中文](README.zh-CN.md)
 
-![Agent Island](Assets/launch.gif)
+<img src="Assets/agent-island-usage.png" alt="Agent Island usage and reset view" width="900">
+<img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-trigger sessions view" width="900">
 
 </div>
 

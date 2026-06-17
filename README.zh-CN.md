@@ -6,7 +6,8 @@
 
 [English](README.md)
 
-![Agent Island](Assets/launch.gif)
+<img src="Assets/agent-island-usage.png" alt="Agent Island 用量与重置视图" width="900">
+<img src="Assets/agent-island-auto-trigger.png" alt="Agent Island 自动触发会话视图" width="900">
 
 </div>
 
