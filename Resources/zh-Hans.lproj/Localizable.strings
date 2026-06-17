@@ -191,3 +191,9 @@
 /* Stall sound toggle */
 "Stall sound" = "卡住提示音";
 "Beep when a session stalls. Turn off for a silent red alert." = "卡住时哔哔提醒。关掉则只剩红色、无声。";
+
+/* Status guide tab */
+"Status" = "状态说明";
+"Logo states" = "图标状态";
+"Sound" = "声音";
+"What the island's two logos are telling you." = "刘海里这两个 logo 在告诉你什么。";

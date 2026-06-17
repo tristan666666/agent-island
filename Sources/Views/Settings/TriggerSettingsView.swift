@@ -6,7 +6,6 @@ import SwiftUI
 struct TriggerSettingsView: View {
     @ObservedObject private var store = TriggerStore.shared
     @ObservedObject private var usage = UsageStore.shared
-    @ObservedObject private var sound = StallSoundStore.shared
 
     @State private var allSessions: [ScannedSession] = []
     @State private var scanning = false
@@ -32,7 +31,6 @@ struct TriggerSettingsView: View {
             header
             existingList
             addCard
-            statusGuide
         }
         .padding(.horizontal, 14)
         .padding(.top, 18)
@@ -191,46 +189,6 @@ struct TriggerSettingsView: View {
             .background { RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.03)) }
             .padding(.horizontal, 10)
         }
-    }
-
-    // MARK: - Status guide
-
-    /// Each row shows the *real* logo animating that state (not a stand-in
-    /// icon), plus a toggle to silence the stall beep. Styled like the other
-    /// settings sections for consistency.
-    private var statusGuide: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Status guide").padding(.top, 16).padding(.bottom, 2)
-            legendRow(.working, "Working", "The agent is producing output — its logo gently breathes.")
-            legendRow(.needsYou, "Your turn", "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply.")
-            legendRow(.stalled, "Stalled", "A session froze mid-conversation — the logo turns red and beeps.")
-            SettingsRow(
-                title: "Stall sound",
-                subtitle: "Beep when a session stalls. Turn off for a silent red alert."
-            ) {
-                SettingsToggle(isOn: sound.enabled) { sound.enabled.toggle() }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func legendRow(_ state: ActivityMonitor.State, _ title: String, _ desc: String) -> some View {
-        HStack(alignment: .center, spacing: 14) {
-            StatePreviewLogo(state: state)
-                .frame(width: 30, height: 26)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.tr(title))
-                    .font(Typography.rowTitle).tracking(-0.07)
-                    .foregroundStyle(.white.opacity(0.92))
-                Text(L10n.tr(desc))
-                    .font(Typography.label)
-                    .foregroundStyle(.white.opacity(0.55))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 9)
     }
 
     // MARK: - Helpers

@@ -52,10 +52,11 @@ struct SettingsView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 Group {
                     switch activeTab {
-                    case .general:   generalTab
-                    case .display:   displayTab
-                    case .providers: providersTab
-                    case .triggers:  TriggerSettingsView()
+                    case .general:     generalTab
+                    case .display:     displayTab
+                    case .providers:   providersTab
+                    case .triggers:    TriggerSettingsView()
+                    case .statusGuide: StatusGuideView()
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
@@ -74,14 +75,15 @@ struct SettingsView: View {
     // MARK: - Tabs
 
     enum SettingsTab: String, CaseIterable {
-        case general, display, providers, triggers
+        case general, display, providers, triggers, statusGuide
 
         var label: String {
             switch self {
-            case .general:   "General"
-            case .display:   "Display"
-            case .providers: "Providers"
-            case .triggers:  "Triggers"
+            case .general:     "General"
+            case .display:     "Display"
+            case .providers:   "Providers"
+            case .triggers:    "Triggers"
+            case .statusGuide: "Status"
             }
         }
     }
