@@ -21,7 +21,7 @@ struct BrandHeader: View {
             mark
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("AgentIsland")
+                Text("Agent Island")
                     .font(Typography.brand)
                     .tracking(-0.15)
                     .foregroundStyle(.white.opacity(0.92))

@@ -16,30 +16,49 @@ struct TriggerSettingsView: View {
 
     private static let rel: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
+        f.locale = L10n.locale
         f.unitsStyle = .abbreviated
         return f
     }()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            existingSection
-            addSection
+            header
+            existingList
+            addCard
         }
+        .padding(.horizontal, 14)
+        .padding(.top, 18)
+        .padding(.bottom, 16)
         .task { if sessions.isEmpty { await loadSessions() } }
+    }
+
+    // MARK: - Header / intro
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionLabel("Auto-Trigger")
+            Text(L10n.tr("When your AI limit resets, auto-send a message so a session keeps running."))
+                .font(Typography.label)
+                .foregroundStyle(.white.opacity(0.50))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 10)
+        }
+        .padding(.bottom, 10)
     }
 
     // MARK: - Existing triggers
 
-    private var existingSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Auto-Trigger")
-            if store.triggers.isEmpty {
-                Text("No triggers yet — add one below.")
-                    .font(Typography.label)
-                    .foregroundStyle(.white.opacity(0.40))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-            } else {
+    @ViewBuilder
+    private var existingList: some View {
+        if store.triggers.isEmpty {
+            Text(L10n.tr("No triggers yet — add one below."))
+                .font(Typography.label)
+                .foregroundStyle(.white.opacity(0.36))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
+        } else {
+            VStack(spacing: 0) {
                 ForEach(store.triggers) { trigger in
                     SettingsRow(
                         title: trigger.label,
@@ -55,46 +74,45 @@ struct TriggerSettingsView: View {
                             Button { store.remove(trigger.id) } label: {
                                 Image(systemName: "trash")
                                     .font(.system(size: 11))
-                                    .foregroundStyle(.white.opacity(0.40))
+                                    .foregroundStyle(.white.opacity(0.36))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Delete trigger")
+                            .accessibilityLabel(L10n.tr("Delete trigger"))
                         }
                     }
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 18)
-        .padding(.bottom, 6)
     }
 
-    // MARK: - Add form
+    // MARK: - New trigger
 
-    private var addSection: some View {
+    private var addCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionLabel("New trigger")
-            VStack(alignment: .leading, spacing: 12) {
-                fieldRow("Session") {
-                    HStack(spacing: 8) {
-                        Picker("", selection: $selectedID) {
-                            if sessions.isEmpty {
-                                Text(scanning ? "Scanning…" : "No sessions").tag(String?.none)
-                            }
-                            ForEach(sessions) { session in
-                                Text("[\(session.tool.display)] \(session.label)")
-                                    .tag(Optional(session.id))
-                            }
+                .padding(.top, 14)
+            VStack(alignment: .leading, spacing: 13) {
+                field("Session") {
+                    Picker("", selection: $selectedID) {
+                        if sessions.isEmpty {
+                            Text(L10n.tr(scanning ? "Scanning…" : "No sessions")).tag(String?.none)
                         }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        PillButton(label: scanning ? "…" : "Rescan") {
-                            Task { await loadSessions() }
+                        ForEach(sessions) { session in
+                            Text("\(session.tool.display) · \(session.label)").tag(Optional(session.id))
                         }
                     }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    Button(action: { Task { await loadSessions() } }) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(scanning ? 0.3 : 0.55))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.tr("Rescan"))
                 }
 
-                fieldRow("Message") {
+                field("Message") {
                     TextField("继续", text: $message)
                         .textFieldStyle(.plain)
                         .font(Typography.label)
@@ -104,53 +122,52 @@ struct TriggerSettingsView: View {
                         .background {
                             RoundedRectangle(cornerRadius: 6)
                                 .fill(.white.opacity(0.05))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .strokeBorder(.white.opacity(0.10), lineWidth: 0.5)
-                                }
+                                .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(.white.opacity(0.10), lineWidth: 0.5) }
                         }
-                        .frame(maxWidth: 220)
+                        .frame(maxWidth: 200)
                 }
 
-                fieldRow("When") {
-                    HStack(spacing: 10) {
-                        SegmentedControl(
-                            items: TriggerMode.allCases,
-                            selected: $mode,
-                            label: { $0 == .afterReset ? "After reset" : "Every Nh" },
-                            accessibilityPrefix: "Trigger timing"
-                        )
-                        if mode == .everyHours {
-                            Stepper("\(hours)h", value: $hours, in: 1...24)
-                                .font(Typography.label)
-                                .foregroundStyle(.white.opacity(0.85))
-                                .fixedSize()
-                        }
+                field("When") {
+                    SegmentedControl(
+                        items: TriggerMode.allCases,
+                        selected: $mode,
+                        label: { $0 == .afterReset ? "After reset" : "Every Nh" },
+                        accessibilityPrefix: "When"
+                    )
+                    if mode == .everyHours {
+                        Stepper("\(hours)h", value: $hours, in: 1...24)
+                            .font(Typography.label)
+                            .foregroundStyle(.white.opacity(0.85))
+                            .fixedSize()
                     }
                 }
 
                 if mode == .afterReset, let caption = resetCaption {
                     Text(caption)
                         .font(Typography.label)
-                        .foregroundStyle(.white.opacity(0.40))
+                        .foregroundStyle(.white.opacity(0.36))
+                        .padding(.leading, 64)
                 }
 
-                HStack {
-                    Spacer()
-                    PillButton(label: "Add & enable") { addTrigger() }
-                        .opacity(selectedID == nil ? 0.5 : 1)
-                        .disabled(selectedID == nil)
+                Button(action: addTrigger) {
+                    Text(L10n.tr("Add & enable"))
+                        .font(Typography.button)
+                        .foregroundStyle(selectedID == nil ? .white.opacity(0.4) : Color(red: 0.14, green: 0.11, blue: 0.02))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background {
+                            RoundedRectangle(cornerRadius: 7)
+                                .fill(selectedID == nil ? .white.opacity(0.06) : IslandColor.cobalt.opacity(0.9))
+                        }
                 }
+                .buttonStyle(.plain)
+                .disabled(selectedID == nil)
+                .padding(.top, 2)
             }
-            .padding(12)
-            .background {
-                RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.03))
-            }
+            .padding(14)
+            .background { RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.03)) }
             .padding(.horizontal, 10)
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 14)
-        .padding(.bottom, 14)
     }
 
     // MARK: - Helpers
@@ -160,19 +177,17 @@ struct TriggerSettingsView: View {
         return sessions.first(where: { $0.id == id })?.tool
     }
 
-    /// Reassures the user the reset clock is live by showing the next reset
-    /// for the selected session's provider.
     private var resetCaption: String? {
         guard let tool = selectedTool else { return nil }
         let reset = (tool == .claude ? usage.claude : usage.codex).fiveHour.resetAt
-        guard let reset else { return "\(tool.display): reset time unknown yet — fires once usage data loads." }
-        return "\(tool.display) resets \(Self.rel.localizedString(for: reset, relativeTo: Date())) — fires then."
+        guard let reset else { return L10n.tr("%@: reset time loads with usage data.", tool.display) }
+        return L10n.tr("%@ resets %@", tool.display, Self.rel.localizedString(for: reset, relativeTo: Date()))
     }
 
     private func addTrigger() {
         guard let id = selectedID,
               let session = sessions.first(where: { $0.id == id }) else { return }
-        let trigger = Trigger(
+        store.add(Trigger(
             tool: session.tool,
             sessionId: session.sessionId,
             label: session.label,
@@ -182,15 +197,12 @@ struct TriggerSettingsView: View {
             everyHours: hours,
             enabled: true,
             lastFired: mode == .everyHours ? Date() : nil
-        )
-        store.add(trigger)
+        ))
     }
 
     private func loadSessions() async {
         scanning = true
-        let found = await Task.detached(priority: .userInitiated) {
-            SessionScanner.scan()
-        }.value
+        let found = await Task.detached(priority: .userInitiated) { SessionScanner.scan() }.value
         sessions = found
         if selectedID == nil { selectedID = found.first?.id }
         scanning = false
@@ -198,11 +210,11 @@ struct TriggerSettingsView: View {
 
     private func subtitle(_ trigger: Trigger) -> String {
         let when = trigger.mode == .afterReset
-            ? "after reset"
-            : "every \(trigger.everyHours)h"
+            ? L10n.tr("after reset")
+            : L10n.tr("every %dh", trigger.everyHours)
         var parts = ["「\(trigger.message)」", when]
         if let last = trigger.lastFired {
-            parts.append("fired \(Self.rel.localizedString(for: last, relativeTo: Date()))")
+            parts.append(L10n.tr("fired %@", Self.rel.localizedString(for: last, relativeTo: Date())))
         }
         return parts.joined(separator: " · ")
     }
@@ -213,23 +225,22 @@ struct TriggerSettingsView: View {
 
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
-        Text(text)
+        Text(L10n.tr(text))
             .font(Typography.sectionLabel)
             .tracking(1.05)
             .textCase(.uppercase)
             .foregroundStyle(.white.opacity(0.34))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10)
-            .padding(.bottom, 6)
     }
 
     @ViewBuilder
-    private func fieldRow<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(alignment: .center, spacing: 12) {
-            Text(label)
+            Text(L10n.tr(label))
                 .font(Typography.label)
                 .foregroundStyle(.white.opacity(0.55))
-                .frame(width: 64, alignment: .leading)
+                .frame(width: 52, alignment: .leading)
             content()
             Spacer(minLength: 0)
         }

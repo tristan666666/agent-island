@@ -7,8 +7,8 @@ import AppKit
 struct SettingsFooter: View {
     @State private var quitHovered = false
 
-    private static let githubURL = URL(string: "https://github.com/ericjypark/codex-island")!
-    private static let licenseURL = URL(string: "https://github.com/ericjypark/codex-island/blob/main/LICENSE")!
+    private static let githubURL = URL(string: "https://github.com/tristan666666/agent-island")!
+    private static let licenseURL = URL(string: "https://github.com/tristan666666/agent-island/blob/main/LICENSE")!
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {

@@ -126,7 +126,7 @@
 "week" = "周";
 "waiting for browser…" = "等待浏览器…";
 "You" = "你";
-"Your AI usage limits, living in your notch." = "你的 AI 用量限额，住在 Mac 刘海里。";
+"Your AI usage limits, living in your notch." = "你的 AI 守夜人 —— 看用量，自动续跑。";
 "Your language change will take effect after AgentIsland restarts." = "语言更改会在 AgentIsland 重启后生效。";
 "⌘-click to cycle" = "⌘ 点击切换";
 "⌘1 — pull real provider data" = "⌘1 — 拉取真实服务数据";
@@ -145,3 +145,26 @@
 "resets in %d minutes" = "%d 分钟后重置";
 "Swipe to change pages." = "滑动切换页面。";
 "Tightens the gap between logos when the island is on a screen without a hardware notch." = "在没有硬件刘海的屏幕上收紧 logo 之间的间距。";
+
+/* Auto-Trigger (Triggers tab) */
+"Triggers" = "自动触发";
+"Auto-Trigger" = "自动触发";
+"When your AI limit resets, auto-send a message so a session keeps running." = "额度重置后，自动给某条会话发一句话，让任务接着跑，不用你守着。";
+"No triggers yet — add one below." = "还没有触发器，在下面加一条。";
+"New trigger" = "新建触发器";
+"Session" = "线程";
+"Message" = "消息";
+"When" = "时机";
+"After reset" = "额度重置后";
+"Every Nh" = "每 N 小时";
+"Add & enable" = "添加并启用";
+"Rescan" = "重新扫描";
+"Run" = "运行";
+"Scanning…" = "扫描中…";
+"No sessions" = "无可用线程";
+"Delete trigger" = "删除触发器";
+"after reset" = "额度重置后";
+"every %dh" = "每 %d 小时";
+"fired %@" = "上次 %@";
+"%@ resets %@" = "%@ 将于 %@ 重置";
+"%@: reset time loads with usage data." = "%@：重置时间随用量数据一起加载。";
