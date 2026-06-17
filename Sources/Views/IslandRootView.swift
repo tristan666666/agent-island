@@ -368,6 +368,8 @@ private struct GlowLayer: View {
     @ObservedObject private var costStore = CostStore.shared
     @ObservedObject private var lowPower = LowPowerModeStore.shared
     @ObservedObject private var alerts = AlertEngine.shared
+    @ObservedObject private var monitor = ActivityMonitor.shared
+    @State private var stallPulse = false
     @ObservedObject private var occlusion = WindowOcclusionStore.shared
 
     var body: some View {
@@ -391,13 +393,20 @@ private struct GlowLayer: View {
                 // suppressed at rest and lights up only on refresh,
                 // hover, or an active alert. Off-LPM it stays at the
                 // ambient 0.35 the way it always has.
+                // Stall overrides everything — the halo glows red and
+                // pulses, visible even at .compact so the user notices
+                // without having to hover.
                 .shadow(
-                    color: glowColor.opacity(
-                        lowPower.effectiveEnabled ? (glowEventActive ? 0.35 : 0) : 0.35
-                    ),
-                    radius: 14, y: 0
+                    color: glowColor.opacity(stallActive
+                        ? (stallPulse ? 0.85 : 0.35)
+                        : (lowPower.effectiveEnabled ? (glowEventActive ? 0.35 : 0) : 0.35)),
+                    radius: stallActive ? (stallPulse ? 22 : 14) : 14, y: 0
                 )
-                .animation(.easeInOut(duration: 0.25), value: glowEventActive)
+                .animation(stallActive
+                    ? .easeInOut(duration: 0.42).repeatForever(autoreverses: true)
+                    : .easeInOut(duration: 0.25),
+                    value: stallActive ? stallPulse : glowEventActive)
+                .onAppear { stallPulse = true }
                 // 0.45s cross-fade so a threshold crossing (e.g. 79%→80%)
                 // doesn't visibly snap the hue from cobalt to amber.
                 .animation(.easeInOut(duration: 0.45), value: alerts.severity)
@@ -425,11 +434,19 @@ private struct GlowLayer: View {
     /// so the glow's visual weight is constant — only the hue signals
     /// severity.
     private var glowColor: Color {
+        if stallActive { return IslandColor.alertRed }
         switch alerts.severity {
         case .none:     return IslandColor.cobalt
         case .warning:  return IslandColor.alertAmber
         case .critical: return IslandColor.alertRed
         }
+    }
+
+    /// True when either provider is stalled — bleeds a red pulse through the
+    /// silhouette even at .compact so the user sees the alarm without having
+    /// to hover open the panel.
+    private var stallActive: Bool {
+        monitor.claude == .stalled || monitor.codex == .stalled
     }
 }
 
