@@ -6,6 +6,12 @@
 
 [简体中文](README.zh-CN.md)
 
+<a href="Assets/agent-island-launch.mp4">
+  <img src="Assets/poster.png" alt="Watch the Agent Island launch video" width="900">
+</a>
+
+[Watch the 33-second launch video](Assets/agent-island-launch.mp4)
+
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-resume sessions view" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island usage planning view" width="900">
 

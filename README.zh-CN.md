@@ -6,6 +6,12 @@
 
 [English](README.md)
 
+<a href="Assets/agent-island-launch.mp4">
+  <img src="Assets/poster.png" alt="观看 Agent Island 发布视频" width="900">
+</a>
+
+[观看 33 秒发布视频](Assets/agent-island-launch.mp4)
+
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island 自动续跑会话视图" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island 用量规划视图" width="900">
 
