@@ -96,6 +96,8 @@ macOS 13+. Universal binary (Apple Silicon + Intel). `./scripts/verify.sh` build
 - The Mac must be awake for a trigger to fire, and each fire spends tokens.
 - ⚠️ A trigger resumes the agent **unattended with permission checks off** (the `--dangerously-*` flags above). Only attach triggers to sessions you trust. Everything runs locally as you; nothing is sent anywhere.
 
+Deeper implementation write-up: [How Agent Island detects Claude Code and Codex session state](docs/how-agent-island-detects-session-state.md).
+
 ## Credits & license
 
 Agent Island is a fork of **[codex-island](https://github.com/ericjypark/codex-island)** by **Eric Park** — the usage-island and cost-tracking foundation are his work. Agent Island adds the auto-trigger watchman and the live session-state animations, and rebrands the project.
