@@ -23,9 +23,13 @@ Sources/Trigger/
   Trigger.swift            — model + CLI locator (hardcoded paths because GUI apps get a stripped PATH)
   SessionScanner.swift     — Claude: ~/Library/Application Support/Claude/claude-code-sessions/local_*.json
                               (title, cliSessionId, isArchived). Codex: ~/.codex/sessions/Y/M/D/*.jsonl (session_meta).
-  TriggerStore.swift       — UserDefaults: "CodexIsland.triggers" (key not renamed; keeps existing users' triggers)
-  TriggerEngine.swift      — subscribes to UsageStore; warms on first resetAt, fires on subsequent change
-                              (afterReset) + every-N-hours timer. Run logs: ~/Library/Application Support/AgentIsland/trigger-runs/
+  TriggerStore.swift       — UserDefaults: "AgentIsland.triggers" (JSON array of Trigger; default empty)
+  TriggerEngine.swift      — subscribes to UsageStore. afterReset fires ONCE per genuine 5h rollover:
+                              resetAt must advance past a boundary that has actually elapsed (previous <= now),
+                              so a resetAt merely sliding forward (demo recomputes it every refresh) is ignored.
+                              Baseline persisted ("AgentIsland.triggerResetBaselines") so a reset missed while
+                              closed/asleep is caught up once on relaunch. Never spawns outside normal mode.
+                              + every-N-hours timer. Run logs: ~/Library/Application Support/AgentIsland/trigger-runs/
   ActivityMonitor.swift    — IO off the main actor. tick() every 6s, classifies on a Task.detached, hops back to
                               assign published state. Demo override: ActivityMonitor.shared.demo(.stalled).
 Sources/Model/
@@ -85,7 +89,7 @@ The video was rendered programmatically (PIL + ffmpeg) using the real Claude/Ope
 ## What's NOT done / open
 
 - **No tweets / HN / PH posts have been sent.** Drafts (EN + zh) exist in this conversation; nothing has been pushed publicly beyond the GitHub repo + Release.
-- **Stale env var name in old `Trigger` UserDefaults key:** persisted triggers live under `"CodexIsland.triggers"` (not `AgentIsland.*`). Intentional — don't rename, would lose existing users' triggers.
+- **Triggers persist under `"AgentIsland.triggers"`**; the per-tool reset baselines under `"AgentIsland.triggerResetBaselines"`. (The old `"CodexIsland.triggers"` key was retired during the rebrand — pre-rename triggers do not migrate.)
 - **Demo screenshots and Suno mp3** are user-local, not committed.
 - **No tests.** The whole project compiles with `swiftc` over `Sources/**/*.swift`; no XCTest target. If adding tests, factor `Scan` and the turn-done helpers further — they're already pure functions.
 - **Code-review punch list** (from the v1.0.0 review pass): all high/medium items fixed. Low items still open:

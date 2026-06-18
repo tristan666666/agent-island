@@ -9,12 +9,21 @@ import Combine
 @MainActor
 final class TriggerEngine: ObservableObject {
     static let shared = TriggerEngine()
-    private init() {}
+    private init() {
+        // Restore the reset boundaries we've already acted on. Persisting these
+        // across launches is what lets a rollover that happens while the app is
+        // closed or asleep get caught up on the next launch, instead of being
+        // silently re-baselined and missed (the "didn't resume overnight" bug).
+        lastReset = Self.loadBaselines()
+    }
 
     private var subs: Set<AnyCancellable> = []
-    private var lastReset: [TriggerTool: Date] = [:]
-    private var warmed: Set<TriggerTool> = []
+    private var lastReset: [TriggerTool: Date]
     private var intervalTimer: Timer?
+
+    /// Per-tool "last reset boundary we've already fired on", persisted so the
+    /// detection survives relaunches. Stored as rawValue → unix-seconds.
+    private static let baselineKey = "AgentIsland.triggerResetBaselines"
 
     func start() {
         let signals: [AnyPublisher<Void, Never>] = [
@@ -39,24 +48,53 @@ final class TriggerEngine: ObservableObject {
         }
     }
 
-    /// A new `resetAt` later than the one we last saw means the window rolled
-    /// over. The first observation per tool only seeds the baseline (no fire),
-    /// so launching mid-window doesn't immediately resume.
+    /// Fire `afterReset` triggers exactly once per genuine 5-hour rollover.
+    ///
+    /// A genuine reset is the window's `resetAt` advancing to a later time
+    /// *after* the boundary we were tracking has actually elapsed
+    /// (`previous <= now`). That one condition is the whole guard:
+    ///  - the first window we ever see only seeds the baseline (no fire), so
+    ///    launching mid-task never resumes;
+    ///  - a `resetAt` that merely slides forward while still in the future
+    ///    (demo recomputes it every refresh) is not a reset — ignored;
+    ///  - because the baseline is persisted, a rollover missed while we were
+    ///    closed or asleep is caught up once on the next launch.
     private func checkResets() {
         for tool in TriggerTool.allCases {
             guard let current = resetAt(tool) else { continue }
-            let previous = lastReset[tool]
-            lastReset[tool] = current
-            if !warmed.contains(tool) {
-                warmed.insert(tool)
+            guard let previous = lastReset[tool] else {
+                setBaseline(current, for: tool)   // first sighting — seed only
                 continue
             }
-            guard let previous, current > previous else { continue }
+            guard current > previous, previous <= Date() else { continue }
+            setBaseline(current, for: tool)
             for trigger in TriggerStore.shared.triggers
             where trigger.enabled && trigger.tool == tool && trigger.mode == .afterReset {
                 fire(trigger)
             }
         }
+    }
+
+    private func setBaseline(_ date: Date, for tool: TriggerTool) {
+        lastReset[tool] = date
+        Self.saveBaselines(lastReset)
+    }
+
+    private static func loadBaselines() -> [TriggerTool: Date] {
+        guard let raw = UserDefaults.standard.dictionary(forKey: baselineKey) as? [String: Double]
+        else { return [:] }
+        return raw.reduce(into: [:]) { acc, kv in
+            if let tool = TriggerTool(rawValue: kv.key) {
+                acc[tool] = Date(timeIntervalSince1970: kv.value)
+            }
+        }
+    }
+
+    private static func saveBaselines(_ map: [TriggerTool: Date]) {
+        let raw = map.reduce(into: [String: Double]()) { acc, kv in
+            acc[kv.key.rawValue] = kv.value.timeIntervalSince1970
+        }
+        UserDefaults.standard.set(raw, forKey: baselineKey)
     }
 
     private func checkIntervals() {
@@ -78,6 +116,14 @@ final class TriggerEngine: ObservableObject {
 
     /// Spawn the resume command detached and log to Application Support.
     func fire(_ trigger: Trigger) {
+        // Hard stop: never spawn a real resume process outside normal mode.
+        // Demo/debug inject synthetic usage (resetAt jumps every refresh), so
+        // firing there would burn real tokens on a loop. Demo is for
+        // screenshots and the launch video only — it must never act.
+        guard AppEnvironment.current == .normal else {
+            NSLog("AgentIsland trigger: suppressed fire in non-normal mode (%@)", trigger.label)
+            return
+        }
         guard let binary = CLILocator.path(for: trigger.tool) else {
             NSLog("AgentIsland trigger: %@ binary not found", trigger.tool.rawValue)
             return
