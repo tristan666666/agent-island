@@ -11,6 +11,14 @@
 
 <video src="https://github.com/user-attachments/assets/d69b41e0-9298-4f17-b6c9-6014f3bd956b" controls width="900"></video>
 
+<p>
+  <a href="#quick-start"><strong>Quick start</strong></a> ·
+  <a href="https://github.com/tristan666666/agent-island/releases/tag/v1.0.0">Latest release</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
+
+<p><strong>If Agent Island saves you a stalled overnight agent run, star it so more Claude/Codex users can find it.</strong></p>
+
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-resume sessions view" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island usage planning view" width="900">
 
@@ -67,16 +75,18 @@ Codex Island is a **passive meter** — it shows your usage. Agent Island is **a
 
 In short: Codex Island tells you *how much you've used*; Agent Island helps long-running agents keep moving and shows you their state — the night-watch.
 
-## Install
+## Quick start
+
+Agent Island's current public install path is a local source build. A packaged DMG/Homebrew install is not verified for this fork yet.
 
 ```sh
 git clone https://github.com/tristan666666/agent-island.git
 cd agent-island
-./build.sh
+./scripts/verify.sh
 open build/AgentIsland.app
 ```
 
-macOS 13+. Universal binary (Apple Silicon + Intel). Auto-update is off in this build.
+macOS 13+. Universal binary (Apple Silicon + Intel). `./scripts/verify.sh` builds and smoke-launches the app once; `open build/AgentIsland.app` starts the local build for normal use. This local source build does not auto-update because `SU_FEED_URL` is empty by default.
 
 ## How it works
 

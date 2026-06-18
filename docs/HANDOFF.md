@@ -80,6 +80,7 @@ Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-a
 ## Public assets
 
 - `poster.png` — Release page header
+- `social-preview.png` — GitHub repository social preview source image
 - `agent-island-usage.png` / `agent-island-auto-trigger.png` — real-notch screenshots
 
 ## What's NOT done / open
