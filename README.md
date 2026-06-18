@@ -77,7 +77,15 @@ In short: Codex Island tells you *how much you've used*; Agent Island helps long
 
 ## Quick start
 
-Agent Island's current public install path is a local source build. A packaged DMG/Homebrew install is not verified for this fork yet.
+Download the latest DMG, drag AgentIsland into Applications, then open it:
+
+[**Download AgentIsland-1.0.0.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.0.0/AgentIsland-1.0.0.dmg)
+
+macOS 13+. Universal binary (Apple Silicon + Intel).
+
+If macOS blocks the first launch because the app is not notarized, right-click AgentIsland in Finder and choose **Open** once.
+
+Source build:
 
 ```sh
 git clone https://github.com/tristan666666/agent-island.git
@@ -85,8 +93,6 @@ cd agent-island
 ./scripts/verify.sh
 open build/AgentIsland.app
 ```
-
-macOS 13+. Universal binary (Apple Silicon + Intel). `./scripts/verify.sh` builds and smoke-launches the app once; `open build/AgentIsland.app` starts the local build for normal use. This local source build does not auto-update because `SU_FEED_URL` is empty by default.
 
 ## How it works
 
