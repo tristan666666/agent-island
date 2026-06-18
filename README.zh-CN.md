@@ -6,11 +6,10 @@
 
 [English](README.md)
 
-<a href="Assets/agent-island-launch.mp4">
-  <img src="Assets/poster.png" alt="观看 Agent Island 发布视频" width="900">
-</a>
+[![已收录 awesome-mac](https://img.shields.io/badge/%E5%B7%B2%E6%94%B6%E5%BD%95-awesome--mac-0969da?style=for-the-badge)](https://github.com/jaywcjlove/awesome-mac/blob/master/README-zh.md#%E8%8F%9C%E5%8D%95%E6%A0%8F%E5%B7%A5%E5%85%B7)
+[![已收录 awesome-swift-macos-apps](https://img.shields.io/badge/%E5%B7%B2%E6%94%B6%E5%BD%95-awesome--swift--macOS-f97316?style=for-the-badge)](https://github.com/jaywcjlove/awesome-swift-macos-apps/blob/main/README.md#ai)
 
-[观看 33 秒发布视频](Assets/agent-island-launch.mp4)
+<video src="https://github.com/user-attachments/assets/d69b41e0-9298-4f17-b6c9-6014f3bd956b" controls width="900"></video>
 
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island 自动续跑会话视图" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island 用量规划视图" width="900">

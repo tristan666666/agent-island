@@ -6,11 +6,10 @@
 
 [简体中文](README.zh-CN.md)
 
-<a href="Assets/agent-island-launch.mp4">
-  <img src="Assets/poster.png" alt="Watch the Agent Island launch video" width="900">
-</a>
+[![Listed in awesome-mac](https://img.shields.io/badge/listed%20in-awesome--mac-0969da?style=for-the-badge)](https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools)
+[![Listed in awesome-swift-macos-apps](https://img.shields.io/badge/listed%20in-awesome--swift--macOS-f97316?style=for-the-badge)](https://github.com/jaywcjlove/awesome-swift-macos-apps/blob/main/README.md#ai)
 
-[Watch the 33-second launch video](Assets/agent-island-launch.mp4)
+<video src="https://github.com/user-attachments/assets/d69b41e0-9298-4f17-b6c9-6014f3bd956b" controls width="900"></video>
 
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-resume sessions view" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island usage planning view" width="900">
