@@ -58,8 +58,8 @@ AGENTISLAND_DEMO=1 ./build/AgentIsland.app/Contents/MacOS/AgentIsland   # demo m
 ```
 
 Demo mode does two things:
-- `UsageStore` injects healthy-looking 73% / 67% / nice reset countdowns (good for screenshots & video).
-- Settings → Status guide gets four buttons: **Working / Your turn / Stalled / Live** to force the notch into any state on cue — this is how the launch video was filmed.
+- `UsageStore` injects healthy-looking 73% / 67% / nice reset countdowns (good for screenshots).
+- Settings → Status guide gets four buttons: **Working / Your turn / Stalled / Live** to force the notch into any state on cue.
 
 Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-as-library -F Vendor/Sparkle -framework SwiftUI -framework AppKit -framework ServiceManagement -framework Sparkle $(find Sources -name '*.swift')`
 
@@ -77,20 +77,16 @@ Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-a
 | Trigger interval-mode interval | `Trigger.everyHours` (per-trigger, UI) | 5h |
 | Beep throttle | `ActivityMonitor.beep()` | 30s min between alarms |
 
-## Launch assets (already in `Assets/` and on the v1.0.0 Release)
+## Public assets
 
-- `launch_v2.mp4` (1.3 MB, 22.5s, 30 fps, Coffee Shop Launch mp3 mixed in) — primary launch video
-- `launch.gif` (2.1 MB, 15 fps) — README / embed / tweet
 - `poster.png` — Release page header
 - `agent-island-usage.png` / `agent-island-auto-trigger.png` — real-notch screenshots
 
-The video was rendered programmatically (PIL + ffmpeg) using the real Claude/OpenAI marks, smoothstep zoom keyframes, captions fading per phase, and the user's Suno track. Source script lived at `/tmp/make_launch_video.py` (not committed).
-
 ## What's NOT done / open
 
-- **No tweets / HN / PH posts have been sent.** Drafts (EN + zh) exist in this conversation; nothing has been pushed publicly beyond the GitHub repo + Release.
+- **Launch distribution started.** X posts/replies, OpenAI Community posts/replies, Reddit megathread comment, and targeted GitHub issue comments have been sent. HN / PH have not been posted.
 - **Triggers persist under `"AgentIsland.triggers"`**; the per-tool reset baselines under `"AgentIsland.triggerResetBaselines"`. (The old `"CodexIsland.triggers"` key was retired during the rebrand — pre-rename triggers do not migrate.)
-- **Demo screenshots and Suno mp3** are user-local, not committed.
+- **Demo screenshots** are user-local unless listed in `Assets/`.
 - **No tests.** The whole project compiles with `swiftc` over `Sources/**/*.swift`; no XCTest target. If adding tests, factor `Scan` and the turn-done helpers further — they're already pure functions.
 - **Code-review punch list** (from the v1.0.0 review pass): all high/medium items fixed. Low items still open:
   - `tailLines` UTF-8 boundary truncation (cosmetic, first partial line is dropped anyway).
