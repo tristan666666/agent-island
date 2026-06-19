@@ -27,9 +27,6 @@
 
 <p><strong>如果 Agent Island 让你少守一次半夜卡住的 agent，给它一个 Star，让更多 Claude/Codex 用户找到它。</strong></p>
 
-<p><strong>从小红书 / 抖音来的？</strong></p>
-<p>直接看 <a href="#快速开始">快速开始</a> 下载 DMG。GitHub 右上角的 <strong>Star</strong> 就像收藏 / 订阅这个开源项目；如果你想看后续安装包、中文教程和新功能，点 Star 比平台点赞更有用。</p>
-
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island 自动续跑会话视图" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island 用量规划视图" width="900">
 
