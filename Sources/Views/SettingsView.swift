@@ -499,9 +499,19 @@ struct SettingsView: View {
                 dot: IslandColor.claude,
                 chip: usage.claude.plan?.uppercased()
             ) {
-                SettingsToggle(isOn: visibility.claudeVisible) {
-                    withAnimation(.openMorph) {
-                        visibility.claudeVisible.toggle()
+                HStack(spacing: 8) {
+                    if ClaudeCredentials.canPromptReauth() {
+                        PillButton(
+                            label: usage.claudeReauthInProgress ? "waiting for login…" : "Re-authenticate",
+                            isLoading: usage.claudeReauthInProgress
+                        ) {
+                            usage.reauthenticateClaude()
+                        }
+                    }
+                    SettingsToggle(isOn: visibility.claudeVisible) {
+                        withAnimation(.openMorph) {
+                            visibility.claudeVisible.toggle()
+                        }
                     }
                 }
             }

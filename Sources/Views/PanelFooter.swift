@@ -132,6 +132,13 @@ struct PanelFooter: View {
         }
     }
 
+    private var activeWarning: String? {
+        switch screenPref.screen {
+        case .usage, .triggers: return usageStore.refreshWarning
+        case .cost, .overview: return nil
+        }
+    }
+
     @ViewBuilder
     private var liveStatus: some View {
         // Click anywhere on the group → trigger a refetch of whichever
@@ -139,11 +146,15 @@ struct PanelFooter: View {
         // each store's refresh() prevent click-spam from stacking fetches.
         Button(action: triggerRefresh) {
             HStack(spacing: 6) {
-                LiveDot(active: activeLastUpdated != nil && !activeLoading)
+                LiveDot(active: activeLastUpdated != nil && !activeLoading && activeWarning == nil)
                 if activeLoading {
                     Text(L10n.tr("Syncing…"))
                         .font(Typography.label)
                         .foregroundStyle(.white.opacity(0.55))
+                } else if let warning = activeWarning {
+                    Text(warning)
+                        .font(Typography.label)
+                        .foregroundStyle(.white.opacity(liveStatusHovered ? 0.85 : 0.55))
                 } else if let updated = activeLastUpdated {
                     Text(L10n.tr("Synced"))
                         .font(Typography.label)
@@ -193,6 +204,7 @@ struct PanelFooter: View {
 
     private var liveStatusSpoken: String {
         if activeLoading { return L10n.tr("Syncing") }
+        if let warning = activeWarning { return warning }
         if let updated = activeLastUpdated { return L10n.tr("Synced %@", relative(updated)) }
         return L10n.tr("Idle")
     }

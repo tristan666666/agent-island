@@ -10,6 +10,7 @@ final class UsageStore: ObservableObject {
     @Published var claude: AppUsage = .empty
     @Published var codex: AppUsage = .empty
     @Published var lastUpdated: Date?
+    @Published var refreshWarning: String?
     @Published var loading = false
     /// Set while a `claude auth login` flow is in progress (spawned + still
     /// polling for the keychain to update). The UI hides the re-auth button
@@ -68,6 +69,7 @@ final class UsageStore: ObservableObject {
                 plan: "pro"
             )
             self.lastUpdated = now
+            self.refreshWarning = nil
             return
         }
 
@@ -90,17 +92,20 @@ final class UsageStore: ObservableObject {
 
             // Don't clobber existing good values when a fetch returns an
             // all-error result. A transient 429 shouldn't blank the panel
-            // back to "0%" — that's worse than slightly stale data. But if
+            // back to "0%" — that's worse than slightly stale data. Preserve
+            // the last useful percentages, but carry the new error forward so
+            // the UI admits the values are stale instead of showing a fake
+            // fresh reset countdown. But if
             // the existing value is itself error-only (cold start sitting
             // on `.empty`, or a series of failures), let the new error
             // through — otherwise a single bad first fetch sticks "no data"
             // permanently even after the network recovers.
-            if !UsageStore.isErrorOnly(c) || UsageStore.isErrorOnly(self.codex) {
-                self.codex = c
-            }
-            if !UsageStore.isErrorOnly(cl) || UsageStore.isErrorOnly(self.claude) {
-                self.claude = cl
-            }
+            let codexFailed = UsageStore.isErrorOnly(c)
+            let claudeFailed = UsageStore.isErrorOnly(cl)
+
+            self.codex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
+            self.claude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
+            self.refreshWarning = UsageStore.refreshWarning(codexFailed: codexFailed, claudeFailed: claudeFailed)
             self.lastUpdated = Date()
             self.loading = false
         }
@@ -111,6 +116,33 @@ final class UsageStore: ObservableObject {
     private static func isErrorOnly(_ u: AppUsage) -> Bool {
         u.fiveHour.error != nil && u.weekly.error != nil
             && u.fiveHour.usedPercent == 0 && u.weekly.usedPercent == 0
+    }
+
+    private static func mergedUsage(existing: AppUsage, fetched: AppUsage) -> AppUsage {
+        guard isErrorOnly(fetched), !isErrorOnly(existing) else { return fetched }
+        let error = fetched.fiveHour.error ?? fetched.weekly.error
+        return AppUsage(
+            fiveHour: WindowUsage(
+                usedPercent: existing.fiveHour.usedPercent,
+                resetAt: existing.fiveHour.resetAt,
+                error: error
+            ),
+            weekly: WindowUsage(
+                usedPercent: existing.weekly.usedPercent,
+                resetAt: existing.weekly.resetAt,
+                error: error
+            ),
+            plan: existing.plan
+        )
+    }
+
+    private static func refreshWarning(codexFailed: Bool, claudeFailed: Bool) -> String? {
+        switch (claudeFailed, codexFailed) {
+        case (true, true): return L10n.tr("Usage refresh failed")
+        case (true, false): return L10n.tr("Claude stale")
+        case (false, true): return L10n.tr("Codex stale")
+        case (false, false): return nil
+        }
     }
 
     /// Replace current usage values with hand-tuned percentages so the
@@ -150,39 +182,50 @@ final class UsageStore: ObservableObject {
             plan: codex.plan ?? "pro"
         )
         self.lastUpdated = now
+        self.refreshWarning = nil
     }
 
-    /// Spawn `claude auth login` and poll for the keychain to update.
+    /// Spawn `claude auth login` and wait for the keychain to update.
     ///
-    /// We can't `await` the OAuth flow directly — it happens in a separate
-    /// process that owns a browser tab and a localhost listener — so we kick
-    /// off retries every few seconds and stop as soon as one returns success
-    /// (or after a generous deadline so the button doesn't stay disabled
-    /// forever if the user closes the browser without completing).
+    /// We can't `await` the OAuth flow directly — it happens in Terminal and
+    /// may involve a browser tab, localhost callback listener, SSO, or manual
+    /// input. Poll the keychain metadata first, then hit the usage API once
+    /// after credentials change. Polling the usage endpoint every few seconds
+    /// can itself trigger Anthropic's rate limit, which hides the real auth
+    /// recovery behind a fresh `rate limited` error.
     func reauthenticateClaude() {
         guard !claudeReauthInProgress else { return }
+        let initialStamp = ClaudeCredentials.keychainModificationStamp()
         guard ClaudeCredentials.spawnReauth() else { return }
         claudeReauthInProgress = true
         reauthPollTask?.cancel()
-        reauthPollTask = Task { [weak self] in
-            // ~2 minutes total — generous enough that even a slow OAuth
-            // round-trip (browser cold start, SSO redirect, 2FA prompt)
-            // resolves in time, short enough to not strand the UI.
-            for _ in 0..<24 {
-                try? await Task.sleep(nanoseconds: 5_000_000_000)
+        reauthPollTask = Task { [weak self, initialStamp] in
+            // ~2 minutes total. The keychain check is local and cheap; the
+            // usage API is called only once when the credentials actually
+            // change, plus one final fallback call before giving up.
+            for _ in 0..<40 {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
                 if Task.isCancelled { return }
-                let cl = await UsageFetcher.fetchClaude()
-                if Task.isCancelled { return }
-                if cl.fiveHour.error == nil || cl.weekly.error == nil {
-                    await MainActor.run {
-                        self?.claude = cl
-                        self?.lastUpdated = Date()
-                        self?.claudeReauthInProgress = false
-                    }
-                    return
+                let currentStamp = ClaudeCredentials.keychainModificationStamp()
+                guard currentStamp != nil, currentStamp != initialStamp else {
+                    continue
                 }
+                await self?.finishClaudeReauthWithSingleFetch()
+                return
             }
-            await MainActor.run { self?.claudeReauthInProgress = false }
+            await self?.finishClaudeReauthWithSingleFetch()
+        }
+    }
+
+    private func finishClaudeReauthWithSingleFetch() async {
+        let cl = await UsageFetcher.fetchClaude()
+        await MainActor.run {
+            self.claude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
+            self.refreshWarning = UsageStore.isErrorOnly(cl) ? L10n.tr("Claude stale") : nil
+            if !UsageStore.isErrorOnly(cl) {
+                self.lastUpdated = Date()
+            }
+            self.claudeReauthInProgress = false
         }
     }
 

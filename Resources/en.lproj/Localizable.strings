@@ -100,6 +100,8 @@
 "Sparkline" = "Sparkline";
 "Spacing" = "Spacing";
 "Stepped" = "Stepped";
+"Claude stale" = "Claude stale";
+"Codex stale" = "Codex stale";
 "swipe panel to view" = "swipe panel to view";
 "swipe panel to view · pricing data %dd old" = "swipe panel to view · pricing data %dd old";
 "Synced" = "Synced";
@@ -107,6 +109,7 @@
 "synced %@" = "synced %@";
 "Syncing" = "Syncing";
 "Syncing…" = "Syncing…";
+"Usage refresh failed" = "Usage refresh failed";
 "Target display" = "Target display";
 "Target Display" = "Target Display";
 "Tint the island and pulse the peek pill when 5-hour usage nears your limit." = "Tint the island and pulse the peek pill when 5-hour usage nears your limit.";
@@ -125,6 +128,7 @@
 "Warning: %d unpriced models — totals may be incomplete." = "Warning: %d unpriced models — totals may be incomplete.";
 "week" = "week";
 "waiting for browser…" = "waiting for browser…";
+"waiting for login…" = "waiting for login…";
 "You" = "You";
 "Your AI usage limits, living in your notch." = "Your AI night-watch: see usage, auto-resume.";
 "Your language change will take effect after AgentIsland restarts." = "Your language change will take effect after AgentIsland restarts.";

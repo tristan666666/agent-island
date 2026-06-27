@@ -100,6 +100,8 @@
 "Sparkline" = "折线";
 "Spacing" = "间距";
 "Stepped" = "阶梯";
+"Claude stale" = "Claude 数据过期";
+"Codex stale" = "Codex 数据过期";
 "swipe panel to view" = "滑动面板查看";
 "swipe panel to view · pricing data %dd old" = "滑动面板查看 · 价格数据已过 %d 天";
 "Synced" = "已同步";
@@ -107,6 +109,7 @@
 "synced %@" = "已同步 %@";
 "Syncing" = "同步中";
 "Syncing…" = "同步中…";
+"Usage refresh failed" = "用量刷新失败";
 "Target display" = "目标屏幕";
 "Target Display" = "目标屏幕";
 "Tint the island and pulse the peek pill when 5-hour usage nears your limit." = "当 5 小时用量接近限额时，为岛和预览胶囊显示提醒效果。";
@@ -125,6 +128,7 @@
 "Warning: %d unpriced models — totals may be incomplete." = "警告：%d 个模型缺少价格，成本总额可能偏低。";
 "week" = "周";
 "waiting for browser…" = "等待浏览器…";
+"waiting for login…" = "等待登录…";
 "You" = "你";
 "Your AI usage limits, living in your notch." = "你的 AI 守夜人 —— 看用量，自动续跑。";
 "Your language change will take effect after AgentIsland restarts." = "语言更改会在 AgentIsland 重启后生效。";

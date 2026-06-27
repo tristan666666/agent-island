@@ -25,12 +25,14 @@ struct UsageView: View {
             switch (claudeOn, codexOn) {
             case (true, true):
                 ChartsBlock(color: IslandColor.claude, usage: store.claude,
+                            showsClaudeReauth: true,
                             style: style, seed: 1)
                 hairline
                 ChartsBlock(color: IslandColor.codex, usage: store.codex,
                             style: style, seed: 3)
             case (true, false):
                 ChartsBlock(color: IslandColor.claude, usage: store.claude,
+                            showsClaudeReauth: true,
                             style: style, seed: 1)
                 hairline
                 PerModelBreakdown(provider: .claude, metric: .tokens)
@@ -78,16 +80,17 @@ struct UsageView: View {
 struct ChartsBlock: View {
     let color: Color
     let usage: AppUsage
+    var showsClaudeReauth = false
     let style: ChartStyle
     let seed: Int
 
-    /// Treat the block as needing re-auth when both windows are stuck on the
-    /// scope-insufficient sentinel. Either tile alone could be a transient
-    /// per-window failure, but matching pair = the underlying token genuinely
-    /// lacks the required scope.
-    private var needsReauth: Bool {
-        usage.fiveHour.error == ClaudeCredentials.reauthRequiredMessage
-            && usage.weekly.error == ClaudeCredentials.reauthRequiredMessage
+    /// Keep a manual Claude auth escape hatch available whenever the Claude
+    /// usage fetch is unhealthy. `rate limited` is not fixed by re-login, but
+    /// users still need a visible path for repairing stale/invalid OAuth state
+    /// instead of being stranded with a caption.
+    private var shouldOfferClaudeReauth: Bool {
+        guard showsClaudeReauth, ClaudeCredentials.canPromptReauth() else { return false }
+        return usage.fiveHour.error != nil || usage.weekly.error != nil
     }
 
     var body: some View {
@@ -98,7 +101,7 @@ struct ChartsBlock: View {
                 ChartTile(style: style, color: color, labelKey: "week",
                           window: usage.weekly, seed: seed + 1)
             }
-            if needsReauth && ClaudeCredentials.canPromptReauth() {
+            if shouldOfferClaudeReauth {
                 ReauthButton()
             }
         }
@@ -119,7 +122,7 @@ struct ReauthButton: View {
         Button {
             store.reauthenticateClaude()
         } label: {
-            Text(store.claudeReauthInProgress ? L10n.tr("waiting for browser…") : L10n.tr("Re-authenticate"))
+            Text(store.claudeReauthInProgress ? L10n.tr("waiting for login…") : L10n.tr("Re-authenticate"))
                 .font(Typography.label)
                 .foregroundStyle(.white.opacity(hovered && !store.claudeReauthInProgress ? 0.95 : 0.72))
                 .padding(.horizontal, 8)
@@ -174,41 +177,43 @@ struct ChartTile: View {
     }
 
     private func subCaption() -> String {
-        if let r = window.resetAt {
-            let delta = max(0, r.timeIntervalSinceNow)
-            return L10n.tr("resets in %@", Duration.compact(delta))
-        }
         // "no data" is our internal sentinel for "API returned null for this
         // window" — most commonly a brand-new 5h period before the first
         // OAuth call lands. Hide it so the tile reads as a passive
         // window-context cue (the "5h"/"week" header label communicates the
-        // window type) instead of looking broken. Real errors still surface.
+        // window type) instead of looking broken. Real errors surface before
+        // reset countdowns because preserved stale values may carry an old
+        // resetAt that would otherwise render as "0s".
         if let err = window.error, err != "no data" {
             // Suppress the scope-insufficient text when the inline re-auth
             // button is going to appear below the tiles — otherwise the same
             // remediation hint reads twice (caption + button label). Users
             // without a discoverable `claude` binary still get the raw text
             // so they know the manual fix.
-            if err == ClaudeCredentials.reauthRequiredMessage,
+            if ClaudeCredentials.isAuthRecoverableError(err),
                ClaudeCredentials.canPromptReauth() {
                 return ""
             }
             return err
+        }
+        if let r = window.resetAt {
+            let delta = max(0, r.timeIntervalSinceNow)
+            return L10n.tr("resets in %@", Duration.compact(delta))
         }
         return ""
     }
 
     private func compactSubCaption() -> String {
-        if let r = window.resetAt {
-            let delta = max(0, r.timeIntervalSinceNow)
-            return "↻ " + Duration.compact(delta)
-        }
         if let err = window.error, err != "no data" {
-            if err == ClaudeCredentials.reauthRequiredMessage,
+            if ClaudeCredentials.isAuthRecoverableError(err),
                ClaudeCredentials.canPromptReauth() {
                 return ""
             }
             return err
+        }
+        if let r = window.resetAt {
+            let delta = max(0, r.timeIntervalSinceNow)
+            return "↻ " + Duration.compact(delta)
         }
         return ""
     }

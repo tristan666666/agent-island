@@ -18,6 +18,12 @@ enum ClaudeCredentials {
     /// (`user:profile`, added mid-2026). The UI layer matches on this exact
     /// string to swap the error caption for an in-app re-auth button.
     static let reauthRequiredMessage = "re-login: claude /login"
+    static let authRequiredMessage = "auth required — run claude"
+
+    static func isAuthRecoverableError(_ message: String?) -> Bool {
+        guard let message else { return false }
+        return message == authRequiredMessage || message == reauthRequiredMessage
+    }
 
     /// Outcome of a single usage-endpoint probe against one token. The fetcher
     /// owns the HTTP + parsing and reports back through this; `ClaudeCredentials`
@@ -63,7 +69,7 @@ enum ClaudeCredentials {
     ///      to platform.claude.com — old URL still resolves but is not the
     ///      canonical issuer for fresh tokens.)
     static func resolveUsage(probe: (_ token: String, _ plan: String?) async -> ProbeOutcome) async -> Resolution {
-        var lastError = "auth required — run claude"
+        var lastError = authRequiredMessage
         // Plan tier ships in the keychain dict only — Anthropic's usage
         // endpoint doesn't echo it back. We peek the keychain even on the
         // env-token path so the chip works for users whose token came from
@@ -173,6 +179,14 @@ enum ClaudeCredentials {
     /// from inside the trailing quotes. Returns nil if the line is missing
     /// or the value is `<NULL>`.
     private static func readClaudeKeychainAccount() -> String? {
+        readClaudeKeychainMetadataValue("acct")
+    }
+
+    static func keychainModificationStamp() -> String? {
+        readClaudeKeychainMetadataValue("mdat")
+    }
+
+    private static func readClaudeKeychainMetadataValue(_ key: String) -> String? {
         let task = Process()
         task.launchPath = "/usr/bin/security"
         task.arguments = ["find-generic-password", "-s", "Claude Code-credentials"]
@@ -185,17 +199,23 @@ enum ClaudeCredentials {
             let output = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
             for line in output.split(separator: "\n") {
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
-                guard trimmed.hasPrefix("\"acct\"") else { continue }
-                guard let eq = trimmed.firstIndex(of: "=") else { return nil }
-                let value = trimmed[trimmed.index(after: eq)...]
-                guard value.hasPrefix("\""), value.hasSuffix("\""), value.count >= 2 else { return nil }
-                let inner = value.dropFirst().dropLast()
+                guard trimmed.hasPrefix("\"\(key)\"") else { continue }
+                guard let inner = lastQuotedValue(afterEqualsIn: trimmed) else { return nil }
                 return inner.isEmpty ? nil : String(inner)
             }
             return nil
         } catch {
             return nil
         }
+    }
+
+    private static func lastQuotedValue(afterEqualsIn line: String) -> String? {
+        guard let eq = line.firstIndex(of: "=") else { return nil }
+        let rhs = line[line.index(after: eq)...]
+        guard let end = rhs.lastIndex(of: "\"") else { return nil }
+        let beforeEnd = rhs[..<end]
+        guard let start = beforeEnd.lastIndex(of: "\"") else { return nil }
+        return String(rhs[rhs.index(after: start)..<end])
     }
 
     /// Updates the existing `Claude Code-credentials` keychain item in place
@@ -282,37 +302,48 @@ enum ClaudeCredentials {
 
     // MARK: - In-app re-auth
 
-    /// True only when the in-app "Re-authenticate" button can actually do
-    /// something useful: the user already has a Claude keychain item
-    /// (otherwise they're a Codex-only user — no Claude flow to re-auth) and
-    /// the `claude` binary exists at a known install path. We deliberately do
-    /// not shell out to `which`; LaunchServices gives the app a stripped PATH
-    /// (`/usr/bin:/bin:/usr/sbin:/sbin`), so a `which` call would miss every
-    /// Homebrew/nvm/Bun install and the button would silently never appear
-    /// for most users.
+    /// True only when the in-app "Re-authenticate" button can actually spawn
+    /// the Claude Code login helper. We only require the CLI here: a missing
+    /// keychain item is itself a valid reason to offer login, and the CLI owns
+    /// writing the `Claude Code-credentials` item after OAuth succeeds. We
+    /// deliberately do not shell out to `which`; LaunchServices gives the app
+    /// a stripped PATH (`/usr/bin:/bin:/usr/sbin:/sbin`), so a `which` call
+    /// would miss every Homebrew/nvm/Bun install and the button would silently
+    /// never appear for most users.
     static func canPromptReauth() -> Bool {
-        guard readClaudeKeychainAccount() != nil else { return false }
         return locateClaudeBinary() != nil
     }
 
-    /// Detached spawn of `claude auth login`. The CLI takes care of opening
-    /// the browser, running the localhost OAuth callback listener, and
-    /// writing the rotated tokens (with the expanded scope set) back to the
-    /// `Claude Code-credentials` keychain item we read on the next refresh.
-    /// Returns false only if `claude` couldn't be located — the spawn itself
-    /// is fire-and-forget; the caller polls for the keychain update.
+    /// Opens a visible Terminal running `claude auth login`. A detached GUI
+    /// `Process` can strand users when the CLI expects an interactive TTY or
+    /// prints a browser URL instead of opening one. A temporary `.command`
+    /// file avoids AppleScript automation prompts while still giving the CLI
+    /// a real Terminal session.
     @discardableResult
     static func spawnReauth() -> Bool {
         guard let path = locateClaudeBinary() else { return false }
+        let command = "\(shellQuoted(path)) auth login"
+        let script = """
+        #!/bin/zsh
+        echo "Agent Island is opening Claude Code login..."
+        exec \(command)
+        """
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("AgentIsland", isDirectory: true)
+        let file = dir.appendingPathComponent("claude-auth-login.command")
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try script.write(to: file, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: file.path)
+        } catch {
+            NSLog("AgentIsland: failed to prepare claude auth login command: %@", error.localizedDescription)
+            return false
+        }
+
         let task = Process()
-        task.launchPath = path
-        task.arguments = ["auth", "login"]
-        // Detach stdio: we don't want the CLI's progress output to leak into
-        // our app's stderr, and we explicitly do not want it inheriting our
-        // controlling terminal (we don't have one — we're a GUI app).
+        task.launchPath = "/usr/bin/open"
+        task.arguments = ["-a", "Terminal", file.path]
         task.standardOutput = Pipe()
         task.standardError = Pipe()
-        task.standardInput = Pipe()
         do {
             try task.run()
             return true
@@ -320,6 +351,10 @@ enum ClaudeCredentials {
             NSLog("AgentIsland: failed to spawn claude auth login: %@", error.localizedDescription)
             return false
         }
+    }
+
+    private static func shellQuoted(_ raw: String) -> String {
+        "'\(raw.replacingOccurrences(of: "'", with: "'\\''"))'"
     }
 
     /// Common install locations for the Claude Code CLI, in priority order.
