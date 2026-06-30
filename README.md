@@ -87,7 +87,7 @@ In short: Codex Island tells you *how much you've used*; Agent Island helps long
 
 Download the current DMG, drag AgentIsland into Applications, then open it:
 
-[**Download AgentIsland-1.2.1.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.1/AgentIsland-1.2.1.dmg)
+[**Download AgentIsland-1.2.2.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.2/AgentIsland-1.2.2.dmg)
 
 macOS 13+. Universal binary (Apple Silicon + Intel).
 

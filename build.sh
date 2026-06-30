@@ -30,7 +30,7 @@ SPARKLE_FW="$SPARKLE_DIR/Sparkle.framework"
 # for CI). To rotate, see docs/SPARKLE.md — DO NOT change this lightly:
 # every existing install verifies updates against this exact public key, and
 # changing it strands them.
-SU_PUBLIC_KEY="bz1gwLBKgIL/Y7OO23o3gaMNIeTpvv/C90F9inr9Quo="
+SU_PUBLIC_KEY="6WJHeBVv3Ft3hRGnmsSEQ8T7AW8jurRQiBfTPtJ5gK0="
 
 SU_FEED_URL="${SU_FEED_URL:-https://github.com/tristan666666/agent-island/releases/latest/download/appcast.xml}"
 

@@ -1,11 +1,11 @@
 # Agent Island · Handoff
 
-State of the project as of v1.2.1 — what shipped, where things live, what the knobs are. Read this first if you (or another agent) are picking it up cold.
+State of the project as of v1.2.2 — what shipped, where things live, what the knobs are. Read this first if you (or another agent) are picking it up cold.
 
 ## Shipped
 
 - Repo: **https://github.com/tristan666666/agent-island** (public, MIT, fork of [codex-island](https://github.com/ericjypark/codex-island))
-- Release candidate: **v1.2.1** — https://github.com/tristan666666/agent-island/releases/tag/v1.2.1
+- Release candidate: **v1.2.2** — https://github.com/tristan666666/agent-island/releases/tag/v1.2.2
 - App bundle id: `dev.agentisland.AgentIsland` · binary at `/Applications/AgentIsland.app`
 - Sparkle auto-update: **enabled** by default through the GitHub release appcast in `build.sh`.
 

@@ -132,10 +132,10 @@ try {
   if (english.includes("v1.1.0") || english.includes("1.1.0") || chinese.includes("v1.1.0") || chinese.includes("1.1.0")) {
     throw new Error("Website must not contain v1.1.0 or 1.1.0 version references");
   }
-  if (!english.includes("v1.2.1") || !chinese.includes("v1.2.1")) {
-    throw new Error("Website must expose v1.2.1 version references");
+  if (!english.includes("v1.2.2") || !chinese.includes("v1.2.2")) {
+    throw new Error("Website must expose v1.2.2 version references");
   }
-  if (englishHero.includes("AgentIsland-1.2.1.dmg") || chineseHero.includes("AgentIsland-1.2.1.dmg")) {
+  if (englishHero.includes("AgentIsland-1.2.2.dmg") || chineseHero.includes("AgentIsland-1.2.2.dmg")) {
     throw new Error("Hero must not link directly to the DMG");
   }
 
@@ -183,7 +183,7 @@ try {
     "#how",
     "#trust",
     "https://github.com/tristan666666/agent-island",
-    "https://github.com/tristan666666/agent-island/tree/v1.2.1",
+    "https://github.com/tristan666666/agent-island/tree/v1.2.2",
     "https://github.com/tristan666666/agent-island/blob/main/LICENSE",
     "https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md",
     "https://github.com/tristan666666/agent-island/blob/main/SECURITY.md",
