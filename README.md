@@ -21,11 +21,11 @@
 
 <p>
   <a href="#quick-start"><strong>Quick start</strong></a> ·
-  <a href="https://github.com/tristan666666/agent-island/releases/tag/v1.0.0">Latest release</a> ·
+  <a href="https://github.com/tristan666666/agent-island/releases/latest">Latest release</a> ·
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
-<p><strong>If Agent Island saves you a stalled overnight agent run, star it so more Claude/Codex users can find it.</strong></p>
+<p><strong>If Agent Island saves you a stalled overnight Claude/Codex run, star it so more Mac users can find it.</strong></p>
 
 <img src="Assets/agent-island-auto-trigger.png" alt="Agent Island auto-resume sessions view" width="900">
 <img src="Assets/agent-island-usage.png" alt="Agent Island usage planning view" width="900">
@@ -56,13 +56,13 @@ Agent Island can auto-send a message (`继续`, `OK`, whatever you set) to a cho
 
 ### ⚡ Live session state, on your logos
 
-The provider logos react to what your agents are actually doing:
+The provider logos react to what your Claude/Codex sessions are actually doing:
 
 | State | How it's detected | The cue |
 |---|---|---|
-| **Working** | transcript still growing | logo breathes + soft glow |
-| **Your turn** | turn finished + stopped | logo **spins** — Claude clockwise ↻, Codex counter-clockwise ↺ — and brightens |
-| **Stalled** | frozen mid-turn too long | **red** alarm pulse + three beeps |
+| **Working** | transcript still growing | logo rotates + soft glow |
+| **Your turn** | turn finished + stopped | foreground alarm window opens and keeps ringing until dismissed |
+| **Needs attention** | limit, login, network, or provider error | **red** alarm pulse on the affected provider logo |
 
 ### 📊 Usage island
 
@@ -76,18 +76,18 @@ Codex Island is a **passive meter** — it shows your usage. Agent Island is **a
 |---|:---:|:---:|
 | Usage / cost / reset in the notch | ✅ | ✅ *(inherited)* |
 | **Auto-resume** a chosen long-running session | — | ✅ Claude & Codex |
-| **Logo reacts to session state** — breathe (working), spin (your turn), red + beep (stalled) | — | ✅ |
+| **Logo reacts to session state** — rotate (working), alarm popup (your turn), red pulse (needs attention) | — | ✅ |
 | **Auto-Trigger** page inside the island | — | ✅ |
-| **Status-guide** settings tab (live legend + sound toggle) | — | ✅ |
+| **Status-guide** settings tab (live legend + alarm sound controls) | — | ✅ |
 | Cross-tool session picker with real thread titles, archived filtered out | — | ✅ |
 
 In short: Codex Island tells you *how much you've used*; Agent Island helps long-running agents keep moving and shows you their state — the night-watch.
 
 ## Quick start
 
-Download the latest DMG, drag AgentIsland into Applications, then open it:
+Download the current DMG, drag AgentIsland into Applications, then open it:
 
-[**Download AgentIsland-1.0.0.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.0.0/AgentIsland-1.0.0.dmg)
+[**Download AgentIsland-1.2.1.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.1/AgentIsland-1.2.1.dmg)
 
 macOS 13+. Universal binary (Apple Silicon + Intel).
 

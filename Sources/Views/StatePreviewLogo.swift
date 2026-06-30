@@ -2,8 +2,7 @@ import SwiftUI
 import AppKit
 
 /// A small, self-animating provider logo for the Settings status guide — it
-/// shows the *real* behavior of each live state (breathing while working,
-/// spinning on your-turn, red pulse when stalled) instead of a stand-in icon.
+/// shows the real behavior of each live state instead of a stand-in icon.
 /// Demo only: a fixed state, not wired to the live monitor.
 struct StatePreviewLogo: View {
     let state: ActivityMonitor.State
@@ -19,8 +18,7 @@ struct StatePreviewLogo: View {
     private var image: NSImage? { provider == .claude ? Self.claudeImage : Self.codexImage }
     private var tint: Color {
         switch state {
-        case .stalled, .authRequired: return Self.alarmRed
-        case .rateLimited: return IslandColor.alertAmber
+        case .stalled, .rateLimited, .authRequired: return Self.alarmRed
         case .idle, .working, .needsYou:
             return provider == .claude ? IslandColor.claude : IslandColor.codex
         }
@@ -28,7 +26,21 @@ struct StatePreviewLogo: View {
 
     var body: some View {
         Group {
-            if let image {
+            if state == .needsYou {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(.white.opacity(0.08))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(.white.opacity(0.14), lineWidth: 0.5)
+                        }
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(tint)
+                }
+                .frame(width: 22, height: 18)
+                .shadow(color: tint.opacity(0.36), radius: 4)
+            } else if let image {
                 Image(nsImage: image)
                     .renderingMode(.template)
                     .resizable()
@@ -58,7 +70,7 @@ struct StatePreviewLogo: View {
     private var glow: CGFloat {
         switch state {
         case .working:  return pulse ? 5 : 2
-        case .needsYou: return pulse ? 7 : 4
+        case .needsYou: return 0
         case .stalled, .authRequired, .rateLimited:  return pulse ? 10 : 3
         case .idle:     return 0
         }
@@ -66,10 +78,13 @@ struct StatePreviewLogo: View {
 
     private func animate() {
         let blocked = state == .stalled || state == .authRequired || state == .rateLimited
-        let dur: Double = blocked ? 0.42 : (state == .needsYou ? 1.0 : 1.7)
-        withAnimation(.easeInOut(duration: dur).repeatForever(autoreverses: true)) { pulse = true }
-        if state == .needsYou {
-            withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
+        if state == .working || blocked {
+            let dur: Double = blocked ? 0.42 : 1.7
+            withAnimation(.easeInOut(duration: dur).repeatForever(autoreverses: true)) { pulse = true }
+        }
+        if state == .working {
+            let duration = 3.8
+            withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
                 spin = (provider == .claude ? 1 : -1) * 360
             }
         }

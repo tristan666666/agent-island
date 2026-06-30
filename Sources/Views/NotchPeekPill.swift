@@ -96,7 +96,7 @@ struct NotchPeekPill: View {
     /// to show). If we have a prior value, keep showing it during refresh —
     /// same principle as UsageStore.isErrorOnly's "don't blank the panel" rule.
     private var showSpinner: Bool {
-        loading && usage.usedPercent == 0 && usage.error == nil
+        loading && usage.usedPercent == 0 && usage.error == "no data"
     }
 
     private var showDash: Bool {

@@ -5,11 +5,6 @@ import AppKit
 struct AgentIslandApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var body: some Scene {
-        // Placeholder scene — `App` requires at least one `Scene`. We never
-        // trigger the system Settings menu (we're a `.accessory` app with
-        // no menu bar), so this stays inert. Settings is shown via our own
-        // SettingsWindowController.
-        Settings { EmptyView() }
         MenuBarExtra {
             MenuBarStatusView()
         } label: {
@@ -26,13 +21,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        UserDefaults.standard.removeObject(forKey: "NSWindow Frame com_apple_SwiftUI_Settings_window")
         island = IslandWindowController()
         island?.show()
 
-        // Route Cmd+, to our hand-rolled Settings window. Without this, the
-        // inert `Settings { EmptyView() }` scene below claims the shortcut and
-        // opens a blank window. Consuming the event (returning nil) keeps that
-        // empty scene from ever surfacing.
         settingsShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
                event.charactersIgnoringModifiers == "," {
@@ -57,13 +49,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // session. Started after the usage store for the same reason.
         TriggerEngine.shared.start()
 
-        // Activity monitor drives the provider-logo states (working / your-turn
-        // / stalled) by watching transcript progress.
         AgentReminderCenter.shared.start()
         ActivityMonitor.shared.start()
+        showDemoTurnAlarmIfNeeded()
 
         // Touch the shared updater so Sparkle starts its background scheduler.
         _ = UpdaterController.shared
+    }
+
+    private func showDemoTurnAlarmIfNeeded() {
+        guard AppEnvironment.isDemo,
+              let raw = ProcessInfo.processInfo.environment["AGENTISLAND_DEMO_TURN_ALARM"] else { return }
+        let provider: AlertEngine.Provider = raw.lowercased() == "claude" ? .claude : .codex
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            let thread = ActivityMonitor.ActiveThread(
+                sessionId: "00000000-0000-0000-0000-000000000000",
+                label: L10n.tr("Demo thread"),
+                cwd: NSHomeDirectory() + "/Documents/Agent Island",
+                modified: Date(),
+                transcriptPath: nil
+            )
+            TurnAlarmWindowController.shared.show(provider: provider, thread: thread)
+        }
     }
 
     /// Pin the app to the run loop until the user explicitly quits.

@@ -1,11 +1,8 @@
 import SwiftUI
 
-/// Settings tab (after Auto-Trigger) that explains what the island's logo
-/// animations mean — each row shows the real logo demoing that state — plus a
-/// switch to silence the stall beep.
 struct StatusGuideView: View {
-    @ObservedObject private var sound = StallSoundStore.shared
     @ObservedObject private var reminders = AgentReminderStore.shared
+    @State private var soundPickerExpanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -17,36 +14,48 @@ struct StatusGuideView: View {
                 .padding(.bottom, 12)
 
             sectionLabel("Logo states")
-            legendRow(.working, "Working", "The agent is producing output — its logo gently breathes.")
-            legendRow(.needsYou, "Your turn", "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply.")
-            legendRow(.stalled, "Stalled", "A session froze mid-conversation — the logo turns red and beeps.")
-            legendRow(.authRequired, "Auth required", "Claude or Codex needs a fresh login before Agent Island can read usage.")
-            legendRow(.rateLimited, "Rate limited", "The provider is refusing usage checks temporarily; wait for it to recover.")
+            legendRow(.working, "Working", "The logo rotates while a session is running.")
+            legendRow(.needsYou, "Your turn", "A thread finished — Agent Island opens an alarm window so you can reply.")
+            legendRow(.authRequired, "Needs attention", "Limits, login, network, or provider errors make the logo pulse red.")
 
             sectionLabel("Reminders").padding(.top, 14)
             SettingsRow(
-                title: "Mac notifications",
-                subtitle: "Notify when a background run needs you, stalls, needs login, or hits a rate limit."
+                title: "Turn alarm",
+                subtitle: "Pop up a foreground alarm and system notification when a background run needs you."
             ) {
                 SettingsToggle(isOn: reminders.enabled) { reminders.enabled.toggle() }
             }
-
-            sectionLabel("Sound").padding(.top, 10)
             SettingsRow(
-                title: "Stall sound",
-                subtitle: "Beep when a session stalls. Turn off for a silent red alert."
+                title: "Show thread details",
+                subtitle: "Show session and project names in alarms and notifications."
             ) {
-                SettingsToggle(isOn: sound.enabled) { sound.enabled.toggle() }
+                SettingsToggle(isOn: reminders.showSessionDetails) { reminders.showSessionDetails.toggle() }
+            }
+            SettingsRow(
+                title: "Alarm sound",
+                subtitle: "Choose a built-in sound or use your own file."
+            ) {
+                SettingsToggle(isOn: reminders.soundEnabled) { reminders.soundEnabled.toggle() }
+            }
+            if reminders.soundEnabled {
+                SoundPickerHeader(isExpanded: $soundPickerExpanded)
+                if soundPickerExpanded {
+                    SoundChoiceList()
+                }
+                SettingsRow(
+                    title: "Volume",
+                    subtitle: "Adjust how loud the alarm sound is."
+                ) {
+                    Slider(value: $reminders.volume, in: 0...1)
+                        .frame(width: 120)
+                }
             }
 
-            // Filming aid: force any state on the real notch on cue. Only shown
-            // when launched with AGENTISLAND_DEMO=1, never in the shipped app.
             if AppEnvironment.isDemo || AppEnvironment.isDebug {
                 sectionLabel("Demo — force a state on the notch").padding(.top, 16)
                 HStack(spacing: 8) {
                     demoButton("Working", .working)
                     demoButton("Your turn", .needsYou)
-                    demoButton("Stalled", .stalled)
                     demoButton("Auth", .authRequired)
                     demoButton("Rate", .rateLimited)
                     demoButton("Live", nil)
@@ -104,5 +113,122 @@ struct StatusGuideView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10)
             .padding(.bottom, 6)
+    }
+
+}
+
+private struct SoundPickerHeader: View {
+    @Binding var isExpanded: Bool
+    @ObservedObject private var reminders = AgentReminderStore.shared
+    @State private var hovered = false
+
+    var body: some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.16)) {
+                isExpanded.toggle()
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Text(L10n.tr("Sound"))
+                    .font(Typography.rowTitle)
+                    .foregroundStyle(.white.opacity(0.92))
+                Spacer(minLength: 8)
+                Text(reminders.soundLabel)
+                    .font(Typography.label)
+                    .foregroundStyle(.white.opacity(0.58))
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.42))
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background {
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(.white.opacity(hovered ? 0.035 : 0.015))
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 10)
+        .padding(.bottom, isExpanded ? 4 : 8)
+        .onHover { hovered = $0 }
+    }
+}
+
+private struct SoundChoiceList: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(AgentReminderStore.AlarmSoundChoice.all, id: \.self) { choice in
+                SoundChoiceRow(choice: choice)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 8)
+    }
+}
+
+private struct SoundChoiceRow: View {
+    let choice: AgentReminderStore.AlarmSoundChoice
+    @ObservedObject private var reminders = AgentReminderStore.shared
+    @State private var hovered = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(L10n.tr(choice.label))
+                .font(Typography.label)
+                .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.72))
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            if let actionLabel {
+                Text(L10n.tr(actionLabel))
+                    .font(Typography.micro)
+                    .foregroundStyle(.white.opacity(0.55))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(.white.opacity(0.055))
+                    }
+            }
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(IslandColor.cobalt)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background {
+            Rectangle()
+                .fill(.white.opacity(isSelected ? 0.055 : (hovered ? 0.028 : 0)))
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(.white.opacity(0.045))
+                .frame(height: 0.5)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            reminders.selectSoundChoice(choice)
+        }
+        .onHover { inside in
+            hovered = inside
+            if inside {
+                reminders.previewSoundChoice(choice)
+            }
+        }
+        .animation(.easeOut(duration: 0.10), value: hovered)
+        .animation(.easeOut(duration: 0.10), value: isSelected)
+    }
+
+    private var isSelected: Bool {
+        reminders.soundChoice == choice
+    }
+
+    private var actionLabel: String? {
+        guard choice == .custom else { return nil }
+        if reminders.customSoundPath == nil { return "Choose" }
+        return isSelected ? "Change" : nil
     }
 }

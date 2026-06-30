@@ -19,10 +19,10 @@
         <span>Agent Island</span>
       </a>
       <nav aria-label="主导航">
-        <a href="#proof">开源证明</a>
-        <a href="#how">接手过程</a>
-        <a href="#get-started">开始使用</a>
-        <a href="#trust">信任边界</a>
+        <a href="#proof">仓库</a>
+        <a href="#how">接手</a>
+        <a href="#trust">信任</a>
+        <a href="#faq">FAQ</a>
       </nav>
       <div class="header-actions">
         <div class="language-switch" aria-label="语言">
@@ -37,14 +37,88 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-shell">
           <div class="hero-copy">
-            <p class="eyebrow">开源 macOS 工具 / MIT / v1.2.0</p>
+            <p class="eyebrow">开源 / MIT / v1.2.1</p>
             <h1 id="hero-title">Agent Island</h1>
-            <p class="hero-kicker">给 Claude Code 和 Codex 长任务用的 AI 守夜人。</p>
-            <p class="hero-subtitle">它在后台盯住长时间运行的 agent 会话。当任务完成、卡住、触达额度，或者正在等你输入时，它会把接手机会变得可见。</p>
+            <p class="hero-kicker">给 Claude Code 和 Codex 长任务用的本地守夜人。</p>
+            <p class="hero-subtitle">它会观察会话状态：工作还在推进时保持安静；一旦任务完成、卡住、触达额度，或者正在等你输入，就把接手机会摆回你的视野里。</p>
             <div class="hero-actions" aria-label="主要操作">
               <a class="primary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer">在 GitHub 上查看</a>
-              <a class="secondary-action" href="#get-started">开始使用</a>
-              <a class="text-action" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签 v1.2.0</a>
+              <a class="secondary-action" href="#proof">检查这个项目</a>
+              <a class="text-action" href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">v1.2.1 标签</a>
+            </div>
+            <div class="hero-meta" aria-label="项目事实">
+              <span>Mac 本地应用</span>
+              <span>源码构建路径</span>
+              <span>不托管同步会话</span>
+            </div>
+          </div>
+
+          <div class="hero-proof" aria-label="Agent Island 产品证明">
+            <div class="product-film">
+              <video class="hero-video" poster="../assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
+                <source src="../assets/agent-island-hero-demo.mp4" type="video/mp4" />
+              </video>
+              <div class="handoff-overlay" aria-hidden="true">
+                <span>Claude Code</span>
+                <strong>该你了</strong>
+                <span>Codex</span>
+              </div>
+            </div>
+            <div class="state-rail" aria-label="会话状态">
+              <button class="state-step is-active" type="button" data-step="01" data-title="安静运行" data-body="会话记录还在变化时，对应的 provider logo 会在刘海里旋转，不会打断你。" data-progress="25%">
+                <span></span>
+                <strong>运行中</strong>
+                <small>agent 还在跑</small>
+              </button>
+              <button class="state-step" type="button" data-step="02" data-title="该你接手" data-body="轮次完成标记出现后，岛会变亮，把下一步动作放回你的视野里。" data-progress="50%">
+                <span></span>
+                <strong>该你了</strong>
+                <small>现在回复</small>
+              </button>
+              <button class="state-step" type="button" data-step="03" data-title="卡住状态" data-body="输出太久不动时，对应 provider 会切到红色注意状态，让这次卡住能被看见。" data-progress="75%">
+                <span></span>
+                <strong>卡住了</strong>
+                <small>需要处理</small>
+              </button>
+              <button class="state-step" type="button" data-step="04" data-title="可信续跑" data-body="已知的重复流程可以在本地继续，但挂载前要先看清权限边界。" data-progress="100%">
+                <span></span>
+                <strong>续跑</strong>
+                <small>可信触发</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="repo-proof" id="proof" aria-labelledby="repo-title">
+        <div class="section-inner repo-layout">
+          <div class="section-lead">
+            <p class="section-label">仓库证明</p>
+            <h2 id="repo-title">先是开源项目，再是官网。</h2>
+            <p>关键说法都指向可以检查的公开位置：源码、版本标签、许可、文档、Issue 和收录证明。</p>
+          </div>
+          <div class="repo-console" aria-label="GitHub 仓库摘要">
+            <div class="repo-console-top">
+              <span>github.com/tristan666666/agent-island</span>
+              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">打开仓库</a>
+            </div>
+            <div class="repo-stats" aria-label="仓库事实">
+              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">
+                <span>Stars</span>
+                <strong>8</strong>
+              </a>
+              <a href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
+                <span>Forks</span>
+                <strong>3</strong>
+              </a>
+              <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
+                <span>许可</span>
+                <strong>MIT</strong>
+              </a>
+              <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">
+                <span>当前标签</span>
+                <strong>v1.2.1</strong>
+              </a>
             </div>
             <div class="hero-command" aria-label="源码构建命令">
               <div>
@@ -55,76 +129,11 @@
 cd agent-island
 ./scripts/verify.sh</code></pre>
             </div>
-          </div>
-
-          <div class="hero-proof" aria-label="Agent Island 产品证明">
-            <div class="demo-frame">
-              <video class="hero-video" poster="../assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
-                <source src="../assets/agent-island-hero-demo.mp4" type="video/mp4" />
-              </video>
-              <div class="island-signal" aria-hidden="true">
-                <span>Claude</span>
-                <strong>该你了</strong>
-                <span>Codex</span>
-              </div>
-            </div>
-            <div class="state-rail" aria-label="会话状态">
-              <button class="state-step is-active" type="button" data-step="01" data-title="安静运行" data-body="会话记录还在变化时，岛只是呼吸，不会打断你。" data-progress="25%">
-                <span></span>
-                <strong>运行中</strong>
-                <small>agent 还在跑</small>
-              </button>
-              <button class="state-step" type="button" data-step="02" data-title="该你接手" data-body="轮次完成标记出现后，岛会变亮，把接手机会摆到你面前。" data-progress="50%">
-                <span></span>
-                <strong>该你了</strong>
-                <small>现在回复</small>
-              </button>
-              <button class="state-step" type="button" data-step="03" data-title="卡住状态" data-body="输出太久不动时，红色状态和声音会提醒你这需要处理。" data-progress="75%">
-                <span></span>
-                <strong>卡住了</strong>
-                <small>需要处理</small>
-              </button>
-              <button class="state-step" type="button" data-step="04" data-title="可信续跑" data-body="已知的重复流程可以在本地继续，但权限绕过边界必须说清楚。" data-progress="100%">
-                <span></span>
-                <strong>续跑</strong>
-                <small>可信触发</small>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="source-strip" aria-label="开源证明">
-          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">
-            <span>GitHub</span>
-            <strong>8 Stars</strong>
-          </a>
-          <a href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
-            <span>Forks</span>
-            <strong>3</strong>
-          </a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
-            <span>许可</span>
-            <strong>MIT</strong>
-          </a>
-          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">
-            <span>收录</span>
-            <strong>awesome-mac</strong>
-          </a>
-        </div>
-      </section>
-
-      <section class="proof-section" id="proof">
-        <div class="section-inner proof-layout">
-          <div class="section-lead">
-            <p class="section-label">仓库证明</p>
-            <h2>它应该像一个能被检查的项目。</h2>
-          </div>
-          <div class="proof-copy">
-            <p>官网优先展示仓库、版本、许可和源码构建路径，因为 Agent Island 更像一个有用的开源 Mac 工具，而不是一个隐藏在品牌话术背后的 SaaS 页面。</p>
-            <div class="proof-links">
-              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">仓库</a>
-              <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签 v1.2.0</a>
+            <div class="repo-links" aria-label="项目链接">
               <a href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">中文 README</a>
+              <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
+              <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
+              <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
             </div>
           </div>
         </div>
@@ -133,15 +142,15 @@ cd agent-island
       <section class="scroll-story" id="how">
         <div class="section-inner story-layout">
           <div class="story-copy">
-            <p class="section-label">滚动接手</p>
-            <h2>页面交互要像产品本身。</h2>
-            <p>向下滚动时，状态会从安静监控变成清晰接手，再进入卡住提醒和可信续跑。</p>
+            <p class="section-label">接手循环</p>
+            <h2>状态跟着产品走。</h2>
+            <p>滚动或点击状态，文案和进度会从安静监控，切到接手、警告和可信续跑。</p>
           </div>
           <div class="story-stage" aria-live="polite">
             <div class="stage-panel" data-stage-panel>
               <span class="stage-index">01</span>
               <h3>安静运行</h3>
-              <p>会话记录还在变化时，岛只是呼吸，不会打断你。</p>
+              <p>会话记录还在变化时，对应的 provider logo 会在刘海里旋转，不会打断你。</p>
             </div>
             <div class="stage-progress">
               <span data-stage-progress></span>
@@ -150,37 +159,21 @@ cd agent-island
         </div>
       </section>
 
-      <section class="screens-section">
-        <div class="section-inner">
-          <div class="section-lead wide">
+      <section class="surfaces-section">
+        <div class="section-inner surfaces-layout">
+          <div class="section-lead">
             <p class="section-label">产品界面</p>
-            <h2>真实截图，不是抽象卡片。</h2>
-            <p>这里使用的就是贡献者可以在仓库里检查的界面：用量状态、重置时间和本地自动触发设置。</p>
+            <h2>真实应用界面，作为证明来展示。</h2>
           </div>
-          <div class="screens-grid">
+          <div class="surface-stack">
             <figure>
               <img src="../assets/agent-island-usage.png" alt="Agent Island 用量与重置状态" />
               <figcaption>紧凑岛里的用量、重置时间和实时状态。</figcaption>
             </figure>
             <figure>
               <img src="../assets/agent-island-auto-trigger.png" alt="Agent Island 自动触发设置" />
-              <figcaption>给可信重复 Claude 和 Codex 流程用的本地触发设置。</figcaption>
+              <figcaption>给可信、可重复 Claude 和 Codex 流程用的本地触发设置。</figcaption>
             </figure>
-          </div>
-        </div>
-      </section>
-
-      <section class="install-section" id="get-started">
-        <div class="section-inner install-layout">
-          <div>
-            <p class="section-label">开始使用</p>
-            <h2>先从源码开始。需要可复现路径时锁定版本。</h2>
-            <p>克隆仓库可以看到完整构建路径；v1.2.0 tag 对应的是这个官网展示的公开版本快照。</p>
-          </div>
-          <div class="install-actions">
-            <a class="primary-action dark" href="https://github.com/tristan666666/agent-island" rel="noreferrer">查看源码</a>
-            <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">阅读 README</a>
-            <a class="version-link" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签</a>
           </div>
         </div>
       </section>
@@ -189,13 +182,13 @@ cd agent-island
         <div class="section-inner trust-layout">
           <div>
             <p class="section-label">信任边界</p>
-            <h2>本地优先，也把锋利边界说清楚。</h2>
+            <h2>本地优先，边界清楚。</h2>
           </div>
-          <ul>
-            <li>它是 Mac 本地工具，不是托管服务。</li>
-            <li>它读取本机会话记录状态，判断任务是在跑、跑完，还是卡住。</li>
-            <li>自动续跑会使用绕过权限确认的危险参数，只应该挂到你信任的会话上。</li>
-            <li>触发日志保存在本机 Application Support 目录下。</li>
+          <ul class="boundary-list">
+            <li><strong>Mac 本地工具。</strong><span>它在你的电脑上运行，不是托管会话服务。</span></li>
+            <li><strong>读取会话状态。</strong><span>它读取本地 transcript 和用量信号，用来判断运行中、完成、卡住或需要认证。</span></li>
+            <li><strong>续跑风险明确。</strong><span>自动续跑会使用绕过权限确认的参数，只适合你已经信任的工作流。</span></li>
+            <li><strong>更新路径可检查。</strong><span>Sparkle 说明、版本标签、许可证和安全策略都公开在仓库里。</span></li>
           </ul>
         </div>
       </section>
@@ -205,7 +198,7 @@ cd agent-island
           <div class="section-lead wide">
             <p class="section-label">FAQ</p>
             <h2>安装前先看清楚。</h2>
-            <p>这里是项目文档的短版：它是什么、在哪里运行、v1.2.0 更新了什么，以及哪些地方需要信任边界。</p>
+            <p>这里是项目文档的短版：它是什么、在哪里运行、v1.2.1 更新了什么，以及哪些地方需要信任边界。</p>
           </div>
           <div class="faq-list">
             <article>
@@ -217,8 +210,8 @@ cd agent-island
               <p>不会。它是本机 Mac 应用。会话状态和触发运行日志都留在你的电脑上，除非你主动分享。</p>
             </article>
             <article>
-              <h3>v1.2.0 更新了什么？</h3>
-              <p>v1.2.0 版本重点是实时会话状态、前台 Turn alarm、自动续跑控制，以及用于解释注意力状态的 Status guide。</p>
+              <h3>v1.2.1 更新了什么？</h3>
+              <p>v1.2.1 版本重点是实时会话状态、前台 Turn alarm、自动续跑控制，以及用于解释注意力状态的 Status guide。</p>
             </article>
             <article>
               <h3>它怎么判断会话状态？</h3>
@@ -238,38 +231,54 @@ cd agent-island
     </main>
 
     <footer class="site-footer">
-      <div class="footer-grid">
-        <section>
-          <h3>学习</h3>
-          <a href="#faq">常见问题</a>
-          <a href="#how">接手过程</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md" rel="noreferrer">会话检测</a>
-        </section>
-        <section>
-          <h3>项目</h3>
-          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub 仓库</a>
-          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签 v1.2.0</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">许可证</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md" rel="noreferrer">贡献指南</a>
-        </section>
-        <section>
-          <h3>信任</h3>
-          <a href="#trust">本地边界</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/SECURITY.md" rel="noreferrer">安全策略</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md" rel="noreferrer">Sparkle 更新</a>
-        </section>
-        <section>
-          <h3>社区</h3>
-          <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
-          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
-          <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
-        </section>
-        <section>
-          <h3>元信息</h3>
-          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">当前标签 v1.2.0</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">MIT</a>
+      <div class="footer-shell">
+        <div class="footer-brand">
+          <a class="footer-logo" href="#top" aria-label="Agent Island 首页">
+            <img src="../assets/agentisland_logo.png" alt="" />
+            <span>Agent Island</span>
+          </a>
+          <p>给 Claude Code 和 Codex 会话使用的开源 macOS 守夜工具。源码、信任边界和接手状态都应该放在明处。</p>
+          <div class="footer-proof" aria-label="项目证明">
+            <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
+            <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">v1.2.1</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">MIT</a>
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <section>
+            <h3>学习</h3>
+            <a href="#faq">常见问题</a>
+            <a href="#how">接手循环</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md" rel="noreferrer">会话检测</a>
+          </section>
+          <section>
+            <h3>项目</h3>
+            <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub 仓库</a>
+            <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">版本标签 v1.2.1</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">中文 README</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md" rel="noreferrer">贡献指南</a>
+          </section>
+          <section>
+            <h3>信任</h3>
+            <a href="#trust">本地边界</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/SECURITY.md" rel="noreferrer">安全策略</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md" rel="noreferrer">Sparkle 更新</a>
+          </section>
+          <section>
+            <h3>社区</h3>
+            <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
+            <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
+            <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
+          </section>
+        </div>
+
+        <div class="footer-bottom">
           <span>© 2026 Agent Island</span>
-        </section>
+          <a href="../" hreflang="en">English</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">License</a>
+          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">当前标签 v1.2.1</a>
+        </div>
       </div>
     </footer>
 

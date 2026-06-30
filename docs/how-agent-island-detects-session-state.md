@@ -4,9 +4,9 @@ Agent Island is built around a small problem that becomes painful during long ag
 
 Agent Island turns that into a local macOS signal:
 
-- **working**: the provider logo breathes.
-- **your turn**: the provider logo spins.
-- **stalled**: the provider logo turns red and plays a short beep sequence.
+- **working**: the provider logo rotates.
+- **your turn**: a foreground alarm window opens and keeps ringing until dismissed.
+- **needs attention**: limit, login, network, or provider errors turn the affected provider logo red.
 
 The implementation is intentionally conservative. It would rather miss a stale session than flash a false alarm for an old transcript or a slow tool call.
 
@@ -46,7 +46,7 @@ The core inputs are:
 - the last few JSONL events;
 - whether this app has recently observed the file producing output.
 
-The thresholds live in `Sources/Trigger/ActivityMonitor.swift`:
+The thresholds live in `Sources/Trigger/SessionScanner.swift`:
 
 | Signal | Current threshold | Meaning |
 |---|---:|---|
@@ -78,7 +78,7 @@ payload.type: task_complete
 
 If a newer `task_started` appears before a completion marker, Codex is treated as still working.
 
-## Detecting "Stalled"
+## Detecting Attention States
 
 A stalled session is not just "a file did not change for a while." That would be too noisy.
 
@@ -89,14 +89,14 @@ The scanner only returns stalled when all of these are true:
 - no fresh turn-complete marker is visible in the tail;
 - the session is still inside the 15-minute stall cap.
 
-This catches the failure mode Agent Island cares about: a long-running agent that was active, then froze mid-turn while you were not watching.
+This catches the failure mode Agent Island cares about: a long-running agent that was active, then froze mid-turn while you were not watching. Usage fetch errors can also promote a provider into an attention state when credentials expire, provider checks are temporarily refused, or another recoverable service error appears.
 
 ## Aggregating Per Provider
 
 Claude and Codex can each have multiple candidate transcripts. Agent Island classifies each file, then takes the most urgent state for that provider:
 
 ```text
-idle < working < your turn < stalled
+idle < working < your turn < stalled < rate limited < auth required
 ```
 
 That gives one visible Claude state and one visible Codex state in the notch.
@@ -158,4 +158,3 @@ The notch is for a narrower job: a persistent, low-friction signal that answers 
 > Is my agent still moving, waiting for me, or stuck?
 
 That is the surface Agent Island optimizes for.
-

@@ -12,22 +12,23 @@ struct ScannedSession: Identifiable, Hashable {
     let transcriptPath: String?
 }
 
-/// Discovers active Claude and Codex sessions. Claude names + archived state
-/// come from the Claude desktop session store (so the picker shows real thread
-/// titles like "MiniMax GEO project" and skips archived threads). Codex has no
-/// titled store, so we fall back to the project folder name, one per project.
 enum SessionScanner {
-    static func scan() -> [ScannedSession] {
-        let now = Date()
-        var out = scanClaude(now: now)
-        out += scanCodex(now: now)
+    private static let activeWindow: TimeInterval = 18
+    private static let stallAfter: TimeInterval = 5 * 60
+    private static let stallCap: TimeInterval = 15 * 60
+    private static let needsYouCap: TimeInterval = 20 * 60
+    private static let attentionWindow: TimeInterval = 30 * 60
+
+    static func scan(now: Date = Date(), lastWorking: [String: Date] = [:]) -> [ScannedSession] {
+        var out = scanClaude(now: now, lastWorking: lastWorking)
+        out += scanCodex(now: now, lastWorking: lastWorking)
         out.sort { $0.modified > $1.modified }
         return out
     }
 
     // MARK: - Claude: desktop session store (titles + archived flag)
 
-    private static func scanClaude(now: Date) -> [ScannedSession] {
+    private static func scanClaude(now: Date, lastWorking: [String: Date]) -> [ScannedSession] {
         let fm = FileManager.default
         let root = NSHomeDirectory() + "/Library/Application Support/Claude/claude-code-sessions"
         guard let enumerator = fm.enumerator(atPath: root) else { return [] }
@@ -52,7 +53,7 @@ enum SessionScanner {
                 cwd: cwd,
                 label: title.isEmpty ? fallback(cwd, resume) : title,
                 modified: transcript.map(mtime) ?? Date(timeIntervalSince1970: ms / 1000),
-                status: status(for: transcript, now: now, turnDone: claudeTurnDone),
+                status: status(for: transcript, now: now, lastWorking: lastWorking, turnDone: claudeTurnDone),
                 transcriptPath: transcript
             ))
         }
@@ -61,10 +62,16 @@ enum SessionScanner {
 
     // MARK: - Codex: ~/.codex/sessions, one entry per project folder
 
-    private static func scanCodex(now: Date, limit: Int = 30) -> [ScannedSession] {
+    static func scanCodex(
+        now: Date,
+        lastWorking: [String: Date],
+        limit: Int = 30,
+        dedupeProjects: Bool = true
+    ) -> [ScannedSession] {
         let fm = FileManager.default
         let root = NSHomeDirectory() + "/.codex/sessions"
         guard let enumerator = fm.enumerator(atPath: root) else { return [] }
+        let titles = codexTitleIndex()
         var files: [String] = []
         for case let rel as String in enumerator where rel.hasSuffix(".jsonl") {
             files.append(root + "/" + rel)
@@ -75,15 +82,17 @@ enum SessionScanner {
         for path in files {
             guard let (sid, cwd) = codexMeta(path), !sid.isEmpty else { continue }
             let projectKey = cwd.isEmpty ? sid : cwd
-            if seenProjects.contains(projectKey) { continue }
-            seenProjects.insert(projectKey)
+            if dedupeProjects {
+                if seenProjects.contains(projectKey) { continue }
+                seenProjects.insert(projectKey)
+            }
             out.append(ScannedSession(
                 tool: .codex,
                 sessionId: sid,
                 cwd: cwd,
-                label: cwd.isEmpty ? String(sid.prefix(8)) : (cwd as NSString).lastPathComponent,
+                label: titles[sid] ?? fallback(cwd, sid),
                 modified: mtime(path),
-                status: status(for: path, now: now, turnDone: codexTurnDone),
+                status: status(for: path, now: now, lastWorking: lastWorking, turnDone: codexTurnDone),
                 transcriptPath: path
             ))
             if out.count >= limit { break }
@@ -113,12 +122,27 @@ enum SessionScanner {
 
     // MARK: - Helpers
 
-    private static func fallback(_ cwd: String, _ sid: String) -> String {
+    static func fallback(_ cwd: String, _ sid: String) -> String {
         let base = (cwd as NSString).lastPathComponent
         return base.isEmpty ? String(sid.prefix(8)) : base
     }
 
-    private static func claudeTranscriptIndex() -> [String: String] {
+    private static func codexTitleIndex() -> [String: String] {
+        let path = NSHomeDirectory() + "/.codex/session_index.jsonl"
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return [:] }
+        var out: [String: String] = [:]
+        for line in text.split(separator: "\n") {
+            guard let object = json(String(line)),
+                  let id = object["id"] as? String,
+                  let title = object["thread_name"] as? String
+            else { continue }
+            let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !id.isEmpty && !clean.isEmpty { out[id] = clean }
+        }
+        return out
+    }
+
+    static func claudeTranscriptIndex() -> [String: String] {
         let root = NSHomeDirectory() + "/.claude/projects"
         guard let enumerator = FileManager.default.enumerator(atPath: root) else { return [:] }
         var out: [String: String] = [:]
@@ -130,22 +154,30 @@ enum SessionScanner {
         return out
     }
 
-    private static func status(
+    static func status(
         for path: String?,
         now: Date,
+        lastWorking: [String: Date],
         turnDone: ([String]) -> Bool
     ) -> ActivityMonitor.State {
         guard let path else { return .idle }
         let age = now.timeIntervalSince(mtime(path))
-        if age > 30 * 60 { return .idle }
+        if age > attentionWindow { return .idle }
         let lines = tailLines(path)
-        if age < 18 { return .working }
-        if turnDone(lines) { return age < 20 * 60 ? .needsYou : .idle }
-        if age < 5 * 60 { return .working }
-        return age < 15 * 60 ? .stalled : .idle
+        if age < activeWindow {
+            return .working
+        }
+        if turnDone(lines) { return age < needsYouCap ? .needsYou : .idle }
+        if age < stallAfter { return .working }
+        if let seen = lastWorking[path],
+           now.timeIntervalSince(seen) < stallCap,
+           age < stallCap {
+            return .stalled
+        }
+        return .idle
     }
 
-    private static func claudeTurnDone(_ lines: [String]) -> Bool {
+    static func claudeTurnDone(_ lines: [String]) -> Bool {
         for line in lines.reversed() {
             guard let object = json(line), object["type"] as? String == "assistant" else { continue }
             let stop = (object["message"] as? [String: Any])?["stop_reason"] as? String
@@ -178,7 +210,7 @@ enum SessionScanner {
         return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
     }
 
-    private static func mtime(_ path: String) -> Date {
+    static func mtime(_ path: String) -> Date {
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: path),
               let date = attrs[.modificationDate] as? Date else { return .distantPast }
         return date

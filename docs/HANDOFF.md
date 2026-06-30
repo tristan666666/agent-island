@@ -1,20 +1,20 @@
 # Agent Island · Handoff
 
-State of the project as of v1.0.0 — what shipped, where things live, what the knobs are. Read this first if you (or another agent) are picking it up cold.
+State of the project as of v1.2.1 — what shipped, where things live, what the knobs are. Read this first if you (or another agent) are picking it up cold.
 
 ## Shipped
 
 - Repo: **https://github.com/tristan666666/agent-island** (public, MIT, fork of [codex-island](https://github.com/ericjypark/codex-island))
-- Release: **v1.0.0** — https://github.com/tristan666666/agent-island/releases/tag/v1.0.0
+- Release candidate: **v1.2.1** — https://github.com/tristan666666/agent-island/releases/tag/v1.2.1
 - App bundle id: `dev.agentisland.AgentIsland` · binary at `/Applications/AgentIsland.app`
-- Sparkle auto-update: **disabled** in this build (`SU_FEED_URL` empty in `build.sh`)
+- Sparkle auto-update: **enabled** by default through the GitHub release appcast in `build.sh`.
 
 ## Two core features (the differentiator)
 
 1. **Auto-resume after the 5h reset.** When the provider's 5-hour usage window rolls over, fire `claude --resume <id> -p "<msg>" --dangerously-skip-permissions` or `codex exec resume <id> "<msg>" --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check`. Driven by `UsageStore.fiveHour.resetAt` changing.
-2. **Live session state on the provider logos** (working → breathe; turn finished → spin Claude ↻ / Codex ↺; stalled → red + beep). The stall also bleeds through to the silhouette halo so it's visible at `.compact`.
+2. **Live session state on the provider logos and alarm window** (working → rotate; turn finished → foreground alarm window; stalled/auth/rate/provider errors → red pulse). The red attention state also bleeds through to the silhouette halo so it's visible at `.compact`.
 
-Plus: 4th island page (Auto-Trigger) · 5th Settings tab (Status guide w/ live legend + stall sound toggle) · cross-tool session picker reading real thread titles (Claude's desktop store) / one entry per Codex project / archived filtered out.
+Plus: 4th island page (Auto-Trigger) · 5th Settings tab (Status guide w/ live legend + alarm sound controls) · cross-tool session picker reading real thread titles (Claude's desktop store) / one entry per Codex project / archived filtered out.
 
 ## Code map
 
@@ -33,14 +33,18 @@ Sources/Trigger/
   ActivityMonitor.swift    — IO off the main actor. tick() every 6s, classifies on a Task.detached, hops back to
                               assign published state. Demo override: ActivityMonitor.shared.demo(.stalled).
 Sources/Model/
-  StallSoundStore.swift    — UserDefaults key "AgentIsland.stallSound"; default ON. Read by ActivityMonitor.beep().
+  AgentReminderStore.swift — UserDefaults-backed turn alarm, built-in sound preset, custom sound file, volume.
   ScreenPref.swift         — adds .triggers as the 4th carousel page.
   AppEnvironment.swift     — reads AGENTISLAND_DEMO / AGENTISLAND_DEBUG (CODEXISLAND_* still accepted as fallback).
+  TurnAlarmWindowController.swift — owns the foreground NSPanel lifecycle only.
+  TurnAlarmNavigator.swift — opens Codex/Claude from alarm actions.
+  TurnAlarmSoundLooper.swift — repeats the selected alarm sound until dismissed or paused.
 Sources/Views/
+  TurnAlarmView.swift             — foreground "your turn" alarm UI.
   TriggerPageView.swift          — the 4th island page (reset countdowns + triggers list + Manage button)
   StatePreviewLogo.swift         — animated demo logo for Settings legend (state is fixed at the call site)
-  IslandRootView.swift           — LogoOverlay drives the breathe/spin/red animations. Silhouette halo turns red
-                                    + pulses when ActivityMonitor reports stalled (visible at .compact too).
+  IslandRootView.swift           — LogoOverlay drives working rotation and blocked-state red pulse. Silhouette halo
+                                    turns red + pulses when ActivityMonitor reports attention states.
   Settings/TriggerSettingsView.swift  — 4th Settings tab
   Settings/StatusGuideView.swift      — 5th Settings tab. Demo buttons appear under AGENTISLAND_DEMO=1.
 App.swift                — starts UsageStore, CostStore, AlertEngine, TriggerEngine, ActivityMonitor.
@@ -59,7 +63,7 @@ AGENTISLAND_DEMO=1 ./build/AgentIsland.app/Contents/MacOS/AgentIsland   # demo m
 
 Demo mode does two things:
 - `UsageStore` injects healthy-looking 73% / 67% / nice reset countdowns (good for screenshots).
-- Settings → Status guide gets four buttons: **Working / Your turn / Stalled / Live** to force the notch into any state on cue.
+- Settings → Status guide gets buttons such as **Working / Your turn / Auth / Rate / Live** to force the notch into states on cue.
 
 Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-as-library -F Vendor/Sparkle -framework SwiftUI -framework AppKit -framework ServiceManagement -framework Sparkle $(find Sources -name '*.swift')`
 
@@ -67,15 +71,15 @@ Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-a
 
 | What | Where | Default |
 |---|---|---|
-| Stall detection delay | `Sources/Trigger/ActivityMonitor.swift` — `Scan.stallAfter` | 300s |
-| "Still working" window | `Scan.activeWindow` | 18s |
-| Beyond this = idle, not stalled | `Scan.stallCap` | 15 min |
-| "Your turn" stays fresh | `Scan.needsYouCap` | 20 min |
-| Only watch sessions touched within | `Scan.attentionWindow` | 30 min |
-| Tail bytes / lines | `Scan.tailLines(bytes:keep:)` | 128 KB / 200 |
+| Stall detection delay | `Sources/Trigger/SessionScanner.swift` — `stallAfter` | 300s |
+| "Still working" window | `SessionScanner.activeWindow` | 18s |
+| Beyond this = idle, not stalled | `SessionScanner.stallCap` | 15 min |
+| "Your turn" stays fresh | `SessionScanner.needsYouCap` | 20 min |
+| Only watch sessions touched within | `SessionScanner.attentionWindow` | 30 min |
+| Tail bytes / lines | `SessionScanner.tailLines(bytes:keep:)` | 128 KB / 200 |
 | Activity poll interval | `ActivityMonitor.start()` Timer | 6s |
 | Trigger interval-mode interval | `Trigger.everyHours` (per-trigger, UI) | 5h |
-| Beep throttle | `ActivityMonitor.beep()` | 30s min between alarms |
+| Turn alarm repeat | `Sources/Model/TurnAlarmSoundLooper.swift` | 1.8s until dismissed |
 
 ## Public assets
 
@@ -89,7 +93,7 @@ Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-a
 - **Triggers persist under `"AgentIsland.triggers"`**; the per-tool reset baselines under `"AgentIsland.triggerResetBaselines"`. (The old `"CodexIsland.triggers"` key was retired during the rebrand — pre-rename triggers do not migrate.)
 - **Demo screenshots** are user-local unless listed in `Assets/`.
 - **No tests.** The whole project compiles with `swiftc` over `Sources/**/*.swift`; no XCTest target. If adding tests, factor `Scan` and the turn-done helpers further — they're already pure functions.
-- **Code-review punch list** (from the v1.0.0 review pass): all high/medium items fixed. Low items still open:
+- **Code-review punch list**: all high/medium release blockers from the v1.2 review pass must stay fixed before tagging. Low items still open:
   - `tailLines` UTF-8 boundary truncation (cosmetic, first partial line is dropped anyway).
   - `Process` standardOutput FileHandle in `TriggerEngine.fire()` closes when the spawned process retains it; trailing log bytes may truncate. Cosmetic.
 

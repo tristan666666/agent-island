@@ -17,7 +17,7 @@ struct MenuBarStatusLabel: View {
         switch state {
         case .authRequired: return "person.crop.circle.badge.exclamationmark"
         case .rateLimited: return "hourglass"
-        case .stalled: return "exclamationmark.triangle.fill"
+        case .stalled: return "pause.circle.fill"
         case .needsYou: return "bell.fill"
         case .working: return "sparkles"
         case .idle: return "circle"
@@ -29,7 +29,7 @@ struct MenuBarStatusLabel: View {
         switch state {
         case .authRequired: return "AUTH"
         case .rateLimited: return "LIMIT"
-        case .stalled: return "STALLED"
+        case .stalled: return "PAUSE"
         case .needsYou: return "TURN"
         case .working: return "RUN"
         case .idle: return "AI"

@@ -46,7 +46,10 @@ find ./Resources -maxdepth 1 -type d -name '*.lproj' -exec cp -R {} "$RES_DIR/" 
 # Embed Sparkle.framework. -a preserves the symlinks inside Versions/.
 cp -a "$SPARKLE_FW" "$FRAMEWORKS_DIR/Sparkle.framework"
 
-SWIFT_SOURCES=$(find Sources -name '*.swift' | sort)
+SWIFT_SOURCES=$(find Sources -name '*.swift' \
+  ! -path 'Sources/Push/*' \
+  ! -path 'Sources/Shared/*' \
+  | sort)
 
 # Universal binary, macOS 13 (Ventura) minimum. swiftc can't emit a
 # multi-arch Mach-O directly, so compile each slice and lipo them.

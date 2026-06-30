@@ -19,10 +19,10 @@
         <span>Agent Island</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#proof">Open Source</a>
+        <a href="#proof">Repo</a>
         <a href="#how">Handoff</a>
-        <a href="#get-started">Get Started</a>
         <a href="#trust">Trust</a>
+        <a href="#faq">FAQ</a>
       </nav>
       <div class="header-actions">
         <div class="language-switch" aria-label="Language">
@@ -37,14 +37,88 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-shell">
           <div class="hero-copy">
-            <p class="eyebrow">Open-source macOS utility / MIT / v1.2.0</p>
+            <p class="eyebrow">Open source / MIT / v1.2.1</p>
             <h1 id="hero-title">Agent Island</h1>
-            <p class="hero-kicker">Your AI night-watch for Claude Code and Codex runs.</p>
-            <p class="hero-subtitle">It watches long-running agent sessions in the background, then makes the handoff visible when a run is done, stalled, rate-limited, or waiting for you.</p>
+            <p class="hero-kicker">A local night-watch for long Claude Code and Codex runs.</p>
+            <p class="hero-subtitle">It watches the session state, keeps quiet while work is moving, and makes the handoff visible when the agent is done, stalled, rate-limited, or waiting for you.</p>
             <div class="hero-actions" aria-label="Primary actions">
               <a class="primary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer">View on GitHub</a>
-              <a class="secondary-action" href="#get-started">Get Started</a>
-              <a class="text-action" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag v1.2.0</a>
+              <a class="secondary-action" href="#proof">Inspect the project</a>
+              <a class="text-action" href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">v1.2.1 tag</a>
+            </div>
+            <div class="hero-meta" aria-label="Project facts">
+              <span>Local-first Mac app</span>
+              <span>Source build path</span>
+              <span>No hosted session sync</span>
+            </div>
+          </div>
+
+          <div class="hero-proof" aria-label="Agent Island product proof">
+            <div class="product-film">
+              <video class="hero-video" poster="./assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
+                <source src="./assets/agent-island-hero-demo.mp4" type="video/mp4" />
+              </video>
+              <div class="handoff-overlay" aria-hidden="true">
+                <span>Claude Code</span>
+                <strong>Your turn</strong>
+                <span>Codex</span>
+              </div>
+            </div>
+            <div class="state-rail" aria-label="Session states">
+              <button class="state-step is-active" type="button" data-step="01" data-title="Working quietly" data-body="The transcript is still changing, so the provider logo rotates in the notch instead of interrupting you." data-progress="25%">
+                <span></span>
+                <strong>Working</strong>
+                <small>agent still running</small>
+              </button>
+              <button class="state-step" type="button" data-step="02" data-title="Your turn" data-body="A turn-complete marker appears. The island brightens and puts the next action back in your field of view." data-progress="50%">
+                <span></span>
+                <strong>Your turn</strong>
+                <small>answer now</small>
+              </button>
+              <button class="state-step" type="button" data-step="03" data-title="Stalled" data-body="When output freezes too long, the affected provider switches to the red attention state so the stuck session is visible." data-progress="75%">
+                <span></span>
+                <strong>Stalled</strong>
+                <small>needs attention</small>
+              </button>
+              <button class="state-step" type="button" data-step="04" data-title="Trusted resume" data-body="Known repeatable flows can continue locally, with the permission boundary named before you attach them." data-progress="100%">
+                <span></span>
+                <strong>Resume</strong>
+                <small>trusted trigger</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="repo-proof" id="proof" aria-labelledby="repo-title">
+        <div class="section-inner repo-layout">
+          <div class="section-lead">
+            <p class="section-label">Repository proof</p>
+            <h2 id="repo-title">An open project first, a product site second.</h2>
+            <p>The important claims point back to inspectable public surfaces: source, version tag, license, docs, issues, and collection listings.</p>
+          </div>
+          <div class="repo-console" aria-label="GitHub repository summary">
+            <div class="repo-console-top">
+              <span>github.com/tristan666666/agent-island</span>
+              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">Open repo</a>
+            </div>
+            <div class="repo-stats" aria-label="Repository facts">
+              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">
+                <span>Stars</span>
+                <strong>8</strong>
+              </a>
+              <a href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
+                <span>Forks</span>
+                <strong>3</strong>
+              </a>
+              <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
+                <span>License</span>
+                <strong>MIT</strong>
+              </a>
+              <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">
+                <span>Current tag</span>
+                <strong>v1.2.1</strong>
+              </a>
             </div>
             <div class="hero-command" aria-label="Source build command">
               <div>
@@ -55,76 +129,11 @@
 cd agent-island
 ./scripts/verify.sh</code></pre>
             </div>
-          </div>
-
-          <div class="hero-proof" aria-label="Agent Island product proof">
-            <div class="demo-frame">
-              <video class="hero-video" poster="./assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
-                <source src="./assets/agent-island-hero-demo.mp4" type="video/mp4" />
-              </video>
-              <div class="island-signal" aria-hidden="true">
-                <span>Claude</span>
-                <strong>Your turn</strong>
-                <span>Codex</span>
-              </div>
-            </div>
-            <div class="state-rail" aria-label="Session states">
-              <button class="state-step is-active" type="button" data-step="01" data-title="Working quietly" data-body="The transcript is still changing, so the island breathes instead of interrupting you." data-progress="25%">
-                <span></span>
-                <strong>Working</strong>
-                <small>agent still running</small>
-              </button>
-              <button class="state-step" type="button" data-step="02" data-title="Your turn" data-body="A turn-complete marker appears. The island brightens and makes the handoff obvious." data-progress="50%">
-                <span></span>
-                <strong>Your turn</strong>
-                <small>answer now</small>
-              </button>
-              <button class="state-step" type="button" data-step="03" data-title="Stalled state" data-body="When output freezes too long, the red state and sound tell you this needs attention." data-progress="75%">
-                <span></span>
-                <strong>Stalled</strong>
-                <small>needs attention</small>
-              </button>
-              <button class="state-step" type="button" data-step="04" data-title="Trusted resume" data-body="Known repeatable flows can continue locally, with the permission boundary named." data-progress="100%">
-                <span></span>
-                <strong>Resume</strong>
-                <small>trusted trigger</small>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="source-strip" aria-label="Open-source proof">
-          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">
-            <span>GitHub</span>
-            <strong>8 stars</strong>
-          </a>
-          <a href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
-            <span>Forks</span>
-            <strong>3</strong>
-          </a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
-            <span>License</span>
-            <strong>MIT</strong>
-          </a>
-          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">
-            <span>Listed</span>
-            <strong>awesome-mac</strong>
-          </a>
-        </div>
-      </section>
-
-      <section class="proof-section" id="proof">
-        <div class="section-inner proof-layout">
-          <div class="section-lead">
-            <p class="section-label">Repository proof</p>
-            <h2>Built like a project people can inspect.</h2>
-          </div>
-          <div class="proof-copy">
-            <p>The homepage leads with the repo, version, license, and source build path because Agent Island is closer to a useful open-source Mac tool than a hosted SaaS brand page.</p>
-            <div class="proof-links">
-              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">Repository</a>
-              <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag v1.2.0</a>
+            <div class="repo-links" aria-label="Project links">
               <a href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">README</a>
+              <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
+              <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
+              <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
             </div>
           </div>
         </div>
@@ -133,15 +142,15 @@ cd agent-island
       <section class="scroll-story" id="how">
         <div class="section-inner story-layout">
           <div class="story-copy">
-            <p class="section-label">Scroll handoff</p>
-            <h2>The page behaves like the product.</h2>
-            <p>As you scroll, the state moves from quiet monitoring to a clear handoff, then to stalled and trusted resume states.</p>
+            <p class="section-label">Handoff loop</p>
+            <h2>The page follows the same state change as the product.</h2>
+            <p>Scroll or click the states. The copy and progress rail move from quiet monitoring to handoff, warning, and trusted resume.</p>
           </div>
           <div class="story-stage" aria-live="polite">
             <div class="stage-panel" data-stage-panel>
               <span class="stage-index">01</span>
               <h3>Working quietly</h3>
-              <p>The transcript is still changing, so the island breathes instead of interrupting you.</p>
+              <p>The transcript is still changing, so the provider logo rotates in the notch instead of interrupting you.</p>
             </div>
             <div class="stage-progress">
               <span data-stage-progress></span>
@@ -150,14 +159,13 @@ cd agent-island
         </div>
       </section>
 
-      <section class="screens-section">
-        <div class="section-inner">
-          <div class="section-lead wide">
+      <section class="surfaces-section">
+        <div class="section-inner surfaces-layout">
+          <div class="section-lead">
             <p class="section-label">Product surfaces</p>
-            <h2>Real screenshots, not abstract UI tiles.</h2>
-            <p>The same surfaces a contributor can inspect in the repo: usage state, reset timing, and local auto-trigger setup.</p>
+            <h2>Real app surfaces, framed as evidence.</h2>
           </div>
-          <div class="screens-grid">
+          <div class="surface-stack">
             <figure>
               <img src="./assets/agent-island-usage.png" alt="Agent Island usage and reset status" />
               <figcaption>Usage, reset timing, and live status inside the compact island.</figcaption>
@@ -170,32 +178,17 @@ cd agent-island
         </div>
       </section>
 
-      <section class="install-section" id="get-started">
-        <div class="section-inner install-layout">
-          <div>
-            <p class="section-label">Get Started</p>
-            <h2>Start from source. Pin the version when you need repeatability.</h2>
-            <p>Clone the repository for the full build path, or open the v1.2.0 tag for the exact public snapshot shown on this site.</p>
-          </div>
-          <div class="install-actions">
-            <a class="primary-action dark" href="https://github.com/tristan666666/agent-island" rel="noreferrer">View source</a>
-            <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">Read README</a>
-            <a class="version-link" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag</a>
-          </div>
-        </div>
-      </section>
-
       <section class="trust-section" id="trust">
         <div class="section-inner trust-layout">
           <div>
             <p class="section-label">Trust boundary</p>
             <h2>Local-first, with the sharp edges named.</h2>
           </div>
-          <ul>
-            <li>Runs as a Mac utility, not a hosted service.</li>
-            <li>Reads local transcript state to tell whether a session is working, done, or stalled.</li>
-            <li>Auto-resume uses dangerous permission-bypass flags, so only trusted sessions should be attached.</li>
-            <li>Trigger run logs stay under your local Application Support folder.</li>
+          <ul class="boundary-list">
+            <li><strong>Local Mac utility.</strong><span>It runs on your machine, not as a hosted session service.</span></li>
+            <li><strong>Session-state reading.</strong><span>It reads local transcript and usage signals to detect working, done, stalled, or auth-required states.</span></li>
+            <li><strong>Explicit resume risk.</strong><span>Auto-resume uses dangerous permission-bypass flags and belongs only on workflows you already trust.</span></li>
+            <li><strong>Inspectable update path.</strong><span>Sparkle notes, version tags, license, and security policy are all public in the repo.</span></li>
           </ul>
         </div>
       </section>
@@ -205,7 +198,7 @@ cd agent-island
           <div class="section-lead wide">
             <p class="section-label">FAQ</p>
             <h2>Answers before you install.</h2>
-            <p>The short version of the project docs: what it is, where it runs, what changed in v1.2.0, and what needs trust.</p>
+            <p>The short version of the project docs: what it is, where it runs, what changed in v1.2.1, and what needs trust.</p>
           </div>
           <div class="faq-list">
             <article>
@@ -217,8 +210,8 @@ cd agent-island
               <p>No. It is a local Mac app. Session state and trigger run logs stay on your machine unless you decide to share them.</p>
             </article>
             <article>
-              <h3>What changed in v1.2.0?</h3>
-              <p>The v1.2.0 version centers on live session states, a foreground turn alarm, auto-resume controls, and a status guide for the attention states.</p>
+              <h3>What changed in v1.2.1?</h3>
+              <p>The v1.2.1 version centers on live session states, a foreground turn alarm, auto-resume controls, and a status guide for the attention states.</p>
             </article>
             <article>
               <h3>How does detection work?</h3>
@@ -238,38 +231,54 @@ cd agent-island
     </main>
 
     <footer class="site-footer">
-      <div class="footer-grid">
-        <section>
-          <h3>Learn</h3>
-          <a href="#faq">FAQ</a>
-          <a href="#how">Handoff</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md" rel="noreferrer">Session detection</a>
-        </section>
-        <section>
-          <h3>Project</h3>
-          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub repo</a>
-          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag v1.2.0</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">License</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributing</a>
-        </section>
-        <section>
-          <h3>Trust</h3>
-          <a href="#trust">Local boundary</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/SECURITY.md" rel="noreferrer">Security policy</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md" rel="noreferrer">Sparkle updates</a>
-        </section>
-        <section>
-          <h3>Community</h3>
-          <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
-          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
-          <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
-        </section>
-        <section>
-          <h3>Meta</h3>
-          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Current tag v1.2.0</a>
-          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">MIT</a>
+      <div class="footer-shell">
+        <div class="footer-brand">
+          <a class="footer-logo" href="#top" aria-label="Agent Island home">
+            <img src="./assets/agentisland_logo.png" alt="" />
+            <span>Agent Island</span>
+          </a>
+          <p>Open-source macOS night-watch for Claude Code and Codex sessions. Built for people who want the source, the trust boundary, and the handoff state in view.</p>
+          <div class="footer-proof" aria-label="Project proof">
+            <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
+            <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">v1.2.1</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">MIT</a>
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <section>
+            <h3>Learn</h3>
+            <a href="#faq">FAQ</a>
+            <a href="#how">Handoff loop</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md" rel="noreferrer">Session detection</a>
+          </section>
+          <section>
+            <h3>Project</h3>
+            <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub repo</a>
+            <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">Version tag v1.2.1</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">README</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributing</a>
+          </section>
+          <section>
+            <h3>Trust</h3>
+            <a href="#trust">Local boundary</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/SECURITY.md" rel="noreferrer">Security policy</a>
+            <a href="https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md" rel="noreferrer">Sparkle updates</a>
+          </section>
+          <section>
+            <h3>Community</h3>
+            <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
+            <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
+            <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
+          </section>
+        </div>
+
+        <div class="footer-bottom">
           <span>© 2026 Agent Island</span>
-        </section>
+          <a href="./zh/" hreflang="zh-CN">中文</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">License</a>
+          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.1" rel="noreferrer">Current tag v1.2.1</a>
+        </div>
       </div>
     </footer>
 

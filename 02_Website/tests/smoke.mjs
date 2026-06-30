@@ -88,6 +88,10 @@ function footerHrefs(html) {
   return [...footer.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((match) => match[1]);
 }
 
+function requireMarkup(html, text, label) {
+  if (!html.includes(text)) throw new Error(`Missing ${label}: ${text}`);
+}
+
 function assertSameList(actual, expected, label) {
   const sameLength = actual.length === expected.length;
   const sameValues = actual.every((value, index) => value === expected[index]);
@@ -128,10 +132,10 @@ try {
   if (english.includes("v1.1.0") || english.includes("1.1.0") || chinese.includes("v1.1.0") || chinese.includes("1.1.0")) {
     throw new Error("Website must not contain v1.1.0 or 1.1.0 version references");
   }
-  if (!english.includes("v1.2.0") || !chinese.includes("v1.2.0")) {
-    throw new Error("Website must expose v1.2.0 version references");
+  if (!english.includes("v1.2.1") || !chinese.includes("v1.2.1")) {
+    throw new Error("Website must expose v1.2.1 version references");
   }
-  if (englishHero.includes("AgentIsland-1.2.0.dmg") || chineseHero.includes("AgentIsland-1.2.0.dmg")) {
+  if (englishHero.includes("AgentIsland-1.2.1.dmg") || chineseHero.includes("AgentIsland-1.2.1.dmg")) {
     throw new Error("Hero must not link directly to the DMG");
   }
 
@@ -139,13 +143,13 @@ try {
   const chineseActions = anchorTexts(chineseHero);
   if (englishActions[0] !== "View on GitHub") throw new Error(`English first hero action is ${englishActions[0]}`);
   if (chineseActions[0] !== "在 GitHub 上查看") throw new Error(`Chinese first hero action is ${chineseActions[0]}`);
-  if (!englishHero.includes("source build") || !chineseHero.includes("源码构建")) {
-    throw new Error("Hero must expose the source build path");
+  if (!english.includes("source build") || !chinese.includes("源码构建")) {
+    throw new Error("Page must expose the source build path");
   }
   if (!englishHero.includes("agent-island-hero-demo.mp4") || !chineseHero.includes("../assets/agent-island-hero-demo.mp4")) {
     throw new Error("Hero video source missing");
   }
-  if (!chinese.includes('lang="zh-CN"') || !chinese.includes("给 Claude Code 和 Codex 长任务用的 AI 守夜人。")) {
+  if (!chinese.includes('lang="zh-CN"') || !chinese.includes("给 Claude Code 和 Codex 长任务用的本地守夜人。")) {
     throw new Error("Chinese route must ship static Chinese content");
   }
   if (chinese.includes("Your AI night-watch. Calls you back.")) {
@@ -159,10 +163,19 @@ try {
     throw new Error("Chinese FAQ must appear after Trust and before the footer");
   }
 
-  assertSameList(footerHeadings(english), ["Learn", "Project", "Trust", "Community", "Meta"], "English footer headings");
-  assertSameList(footerHeadings(chinese), ["学习", "项目", "信任", "社区", "元信息"], "Chinese footer headings");
+  for (const html of [english, chinese]) {
+    requireMarkup(html, 'class="repo-proof"', "repository proof module");
+    requireMarkup(html, 'class="footer-brand"', "footer brand block");
+    requireMarkup(html, 'class="footer-bottom"', "footer bottom bar");
+  }
+
+  assertSameList(footerHeadings(english), ["Learn", "Project", "Trust", "Community"], "English footer headings");
+  assertSameList(footerHeadings(chinese), ["学习", "项目", "信任", "社区"], "Chinese footer headings");
   if (footerHeadings(english).includes("Product") || footerHeadings(english).includes("Get Started")) {
     throw new Error("English footer must not include Product or Get Started columns");
+  }
+  if (footerHeadings(english).includes("Meta") || footerHeadings(chinese).includes("元信息")) {
+    throw new Error("Footer must not include a generic Meta column");
   }
 
   const requiredFooterHrefs = [
@@ -170,7 +183,7 @@ try {
     "#how",
     "#trust",
     "https://github.com/tristan666666/agent-island",
-    "https://github.com/tristan666666/agent-island/tree/v1.2.0",
+    "https://github.com/tristan666666/agent-island/tree/v1.2.1",
     "https://github.com/tristan666666/agent-island/blob/main/LICENSE",
     "https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md",
     "https://github.com/tristan666666/agent-island/blob/main/SECURITY.md",

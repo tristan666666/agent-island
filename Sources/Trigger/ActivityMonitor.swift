@@ -1,18 +1,17 @@
 import Foundation
-import AppKit
 
-/// Watches active Claude and Codex sessions and classifies each provider's
-/// live state for the island: breathing while working, a spin when a turn
-/// finishes (your turn), red + beep when a session froze mid-turn (stalled).
-///
-/// Conservative on purpose: a session only ever goes red if we *watched* it go
-/// from actively producing to frozen mid-turn, and stayed frozen past a long
-/// threshold. Sessions that were already quiet (old / abandoned / mid long
-/// tool call) don't flash red. All disk IO runs off the main actor.
 @MainActor
 final class ActivityMonitor: ObservableObject {
     static let shared = ActivityMonitor()
     private init() {}
+
+    struct ActiveThread: Equatable {
+        let sessionId: String
+        let label: String
+        let cwd: String
+        let modified: Date
+        let transcriptPath: String?
+    }
 
     enum State: Int {
         case idle = 0
@@ -24,8 +23,8 @@ final class ActivityMonitor: ObservableObject {
 
         var isAttentionState: Bool {
             switch self {
-            case .needsYou, .stalled, .rateLimited, .authRequired: return true
-            case .idle, .working: return false
+            case .stalled, .rateLimited, .authRequired: return true
+            case .idle, .working, .needsYou: return false
             }
         }
 
@@ -43,25 +42,28 @@ final class ActivityMonitor: ObservableObject {
 
     @Published private(set) var claude: State = .idle
     @Published private(set) var codex: State = .idle
+    @Published private(set) var claudeThread: ActiveThread?
+    @Published private(set) var codexThread: ActiveThread?
     @Published private var demoClaude: State?
     @Published private var demoCodex: State?
+    private var rawClaude: State = .idle
+    private var rawCodex: State = .idle
+    private var lastWorking: [String: Date] = [:]
 
     func state(for provider: AlertEngine.Provider) -> State {
         if provider == .claude { return demoClaude ?? claude }
         return demoCodex ?? codex
     }
 
-    /// Demo override for previewing live states on the real notch (pass nil to
-    /// return to live detection). Beeps on stalled so the alarm behavior can be
-    /// checked on cue.
     func demo(_ state: State?) {
         demoClaude = state
         demoCodex = state
-        if state == .stalled { playBeep() }
     }
 
-    private var lastWorking: [String: Date] = [:]
-    private var lastBeepAt: Date?
+    func thread(for provider: AlertEngine.Provider) -> ActiveThread? {
+        provider == .claude ? claudeThread : codexThread
+    }
+
     private var timer: Timer?
 
     func start() {
@@ -71,27 +73,37 @@ final class ActivityMonitor: ObservableObject {
         }
     }
 
-    /// Snapshot state, do all the file IO + classification on a background
-    /// task, then hop back to assign published state + beep.
     private func tick() {
-        let snapshot = lastWorking
         let now = Date()
+        let lastWorkingSnapshot = lastWorking
         Task.detached(priority: .utility) {
-            let result = Scan.run(lastWorking: snapshot, now: now)
+            let sessions = SessionScanner.monitoringScan(now: now, lastWorking: lastWorkingSnapshot)
             await MainActor.run {
-                let oldClaude = self.claude
-                let oldCodex = self.codex
-                let claude = self.overlayUsageAttention(result.claude, usage: UsageStore.shared.claude)
-                let codex = self.overlayUsageAttention(result.codex, usage: UsageStore.shared.codex)
-                self.lastWorking = result.lastWorking
-                if claude == .stalled && oldClaude != .stalled { self.beep() }
+                let oldClaude = self.rawClaude
+                let oldCodex = self.rawCodex
+                let claudeResult = Self.bestSession(in: sessions, tool: .claude)
+                let codexResult = Self.bestSession(in: sessions, tool: .codex)
+                let claude = self.overlayUsageAttention(claudeResult.state, usage: UsageStore.shared.claude)
+                let codex = self.overlayUsageAttention(codexResult.state, usage: UsageStore.shared.codex)
+                self.updateLastWorking(from: sessions, now: now)
+                self.rawClaude = claudeResult.state
+                self.rawCodex = codexResult.state
+                self.claudeThread = claudeResult.thread
                 self.claude = claude
-                AgentReminderCenter.shared.handle(provider: .claude, old: oldClaude, new: claude)
-                if codex == .stalled && oldCodex != .stalled { self.beep() }
+                AgentReminderCenter.shared.handle(provider: .claude, old: oldClaude, new: claudeResult.state, thread: claudeResult.thread)
+                self.codexThread = codexResult.thread
                 self.codex = codex
-                AgentReminderCenter.shared.handle(provider: .codex, old: oldCodex, new: codex)
+                AgentReminderCenter.shared.handle(provider: .codex, old: oldCodex, new: codexResult.state, thread: codexResult.thread)
             }
         }
+    }
+
+    private func updateLastWorking(from sessions: [ScannedSession], now: Date) {
+        for session in sessions where session.status == .working {
+            if let path = session.transcriptPath { lastWorking[path] = now }
+        }
+        let livePaths = Set(sessions.compactMap(\.transcriptPath))
+        lastWorking = lastWorking.filter { livePaths.contains($0.key) }
     }
 
     private func overlayUsageAttention(_ state: State, usage: AppUsage) -> State {
@@ -100,6 +112,9 @@ final class ActivityMonitor: ObservableObject {
     }
 
     private static func usageAttentionState(_ usage: AppUsage) -> State? {
+        if usage.fiveHour.usedPercent >= 1 || usage.weekly.usedPercent >= 1 {
+            return .rateLimited
+        }
         let messages = [usage.fiveHour.error, usage.weekly.error].compactMap { $0?.lowercased() }
         if messages.contains(where: { $0.contains("rate limited") || $0.contains("rate_limit") }) {
             return .rateLimited
@@ -112,152 +127,53 @@ final class ActivityMonitor: ObservableObject {
         }) {
             return .authRequired
         }
+        if messages.contains(where: isProviderOrNetworkError) {
+            return .rateLimited
+        }
         return nil
     }
 
-    private func beep() {
-        guard StallSoundStore.shared.enabled else { return }
-        if let last = lastBeepAt, Date().timeIntervalSince(last) < 30 { return }   // throttle
-        lastBeepAt = Date()
-        playBeep()
+    private static func isProviderOrNetworkError(_ message: String) -> Bool {
+        message.hasPrefix("http ")
+            || message.contains("bad response")
+            || message.contains("parse error")
+            || message.contains("timed out")
+            || message.contains("timeout")
+            || message.contains("offline")
+            || message.contains("network")
+            || message.contains("internet")
+            || message.contains("connection")
+            || message.contains("cannot connect")
+            || message.contains("could not connect")
+            || message.contains("not connected")
+            || message.contains("dns")
+            || message.contains("ssl")
+            || message.contains("tls")
     }
 
-    private func playBeep() {
-        NSSound.beep()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { NSSound.beep() }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.56) { NSSound.beep() }
-    }
-}
-
-/// Pure, off-actor scan: no shared mutable state beyond the `lastWorking`
-/// snapshot it's handed and returns.
-private enum Scan {
-    struct Result {
-        let claude: ActivityMonitor.State
-        let codex: ActivityMonitor.State
-        let lastWorking: [String: Date]
-    }
-
-    static let activeWindow: TimeInterval = 18       // file grew within → working
-    static let stallAfter: TimeInterval = 300        // frozen mid-turn 5 min → stalled
-    static let stallCap: TimeInterval = 15 * 60      // beyond this it's idle, not a live stall
-    static let needsYouCap: TimeInterval = 20 * 60   // "your turn" only stays fresh this long
-    static let attentionWindow: TimeInterval = 30 * 60
-
-    static func run(lastWorking: [String: Date], now: Date) -> Result {
-        var lw = lastWorking
-        let claudeF = claudeFiles()
-        let codexF = codexFiles(now: now)
-        let c = aggregate(classifyAll(claudeF, now: now, lw: &lw, turnDone: claudeTurnDone))
-        let x = aggregate(classifyAll(codexF, now: now, lw: &lw, turnDone: codexTurnDone))
-        // Prune: only keep entries for files we still consider candidates, so
-        // the dictionary can't grow without bound across a long-running app.
-        let live = Set(claudeF + codexF)
-        lw = lw.filter { live.contains($0.key) }
-        return Result(claude: c, codex: x, lastWorking: lw)
-    }
-
-    private static func aggregate(_ states: [ActivityMonitor.State]) -> ActivityMonitor.State {
-        states.max(by: { $0.rawValue < $1.rawValue }) ?? .idle
-    }
-
-    private static func classifyAll(_ files: [String], now: Date, lw: inout [String: Date],
-                                    turnDone: ([String]) -> Bool) -> [ActivityMonitor.State] {
-        var out: [ActivityMonitor.State] = []
-        for path in files {
-            guard let m = mtime(path) else { continue }
-            let age = now.timeIntervalSince(m)
-            if age > attentionWindow { continue }
-            out.append(classify(path: path, age: age, now: now, lw: &lw, turnDone: turnDone))
+    private static func bestSession(
+        in sessions: [ScannedSession],
+        tool: TriggerTool
+    ) -> (state: State, thread: ActiveThread?) {
+        guard let session = sessions
+            .filter({ $0.tool == tool })
+            .sorted(by: { lhs, rhs in
+                if lhs.status.rawValue != rhs.status.rawValue {
+                    return lhs.status.rawValue > rhs.status.rawValue
+                }
+                return lhs.modified > rhs.modified
+            })
+            .first
+        else {
+            return (.idle, nil)
         }
-        return out
-    }
-
-    private static func classify(path: String, age: TimeInterval, now: Date,
-                                 lw: inout [String: Date], turnDone: ([String]) -> Bool) -> ActivityMonitor.State {
-        if age < activeWindow {
-            lw[path] = now
-            return .working
-        }
-        if turnDone(tailLines(path)) {
-            return age < needsYouCap ? .needsYou : .idle
-        }
-        if age < stallAfter { return .working }   // brief mid-turn pause / slow tool — still working
-        if let seen = lw[path], now.timeIntervalSince(seen) < stallCap, age < stallCap {
-            return .stalled
-        }
-        return .idle
-    }
-
-    // MARK: - Candidate files
-
-    private static func claudeFiles() -> [String] {
-        let fm = FileManager.default
-        let root = NSHomeDirectory() + "/.claude/projects"
-        guard let projects = try? fm.contentsOfDirectory(atPath: root) else { return [] }
-        var files: [String] = []
-        for project in projects {
-            let dir = root + "/" + project
-            guard let entries = try? fm.contentsOfDirectory(atPath: dir) else { continue }
-            for entry in entries where entry.hasSuffix(".jsonl") { files.append(dir + "/" + entry) }
-        }
-        return files
-    }
-
-    private static func codexFiles(now: Date) -> [String] {
-        let cal = Calendar.current
-        var files: [String] = []
-        for offset in 0...1 {
-            guard let day = cal.date(byAdding: .day, value: -offset, to: now) else { continue }
-            let c = cal.dateComponents([.year, .month, .day], from: day)
-            guard let y = c.year, let mo = c.month, let d = c.day else { continue }
-            let dir = String(format: "%@/.codex/sessions/%04d/%02d/%02d", NSHomeDirectory(), y, mo, d)
-            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir) else { continue }
-            for entry in entries where entry.hasSuffix(".jsonl") { files.append(dir + "/" + entry) }
-        }
-        return files
-    }
-
-    // MARK: - Turn markers
-
-    private static func claudeTurnDone(_ lines: [String]) -> Bool {
-        for line in lines.reversed() {
-            guard let object = json(line), object["type"] as? String == "assistant" else { continue }
-            let stop = (object["message"] as? [String: Any])?["stop_reason"] as? String
-            return stop == "end_turn" || stop == "stop_sequence" || stop == "stop"
-        }
-        return false
-    }
-
-    private static func codexTurnDone(_ lines: [String]) -> Bool {
-        for line in lines.reversed() {
-            guard let object = json(line), object["type"] as? String == "event_msg",
-                  let type = (object["payload"] as? [String: Any])?["type"] as? String else { continue }
-            if type == "task_complete" { return true }
-            if type == "task_started" { return false }
-        }
-        return false
-    }
-
-    // MARK: - IO helpers
-
-    /// Last ~128KB / 200 lines — wide enough that a recent turn-complete marker
-    /// isn't scrolled out by a burst of tool output.
-    private static func tailLines(_ path: String, bytes: UInt64 = 131_072, keep: Int = 200) -> [String] {
-        guard let handle = FileHandle(forReadingAtPath: path) else { return [] }
-        defer { try? handle.close() }
-        let size = (try? handle.seekToEnd()) ?? 0
-        try? handle.seek(toOffset: size > bytes ? size - bytes : 0)
-        let data = (try? handle.readToEnd()) ?? Data()
-        return Array(String(decoding: data, as: UTF8.self).split(separator: "\n").map(String.init).suffix(keep))
-    }
-
-    private static func json(_ line: String) -> [String: Any]? {
-        guard let data = line.data(using: .utf8) else { return nil }
-        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-    }
-
-    private static func mtime(_ path: String) -> Date? {
-        (try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate]) as? Date
+        let thread = session.status == .idle ? nil : ActiveThread(
+            sessionId: session.sessionId,
+            label: session.label,
+            cwd: session.cwd,
+            modified: session.modified,
+            transcriptPath: session.transcriptPath
+        )
+        return (session.status, thread)
     }
 }

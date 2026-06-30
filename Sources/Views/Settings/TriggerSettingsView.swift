@@ -4,26 +4,26 @@ import SwiftUI
 /// its active threads, set a message, and choose when it fires — at the real
 /// 5h-window reset (the signal the island already tracks) or a fixed interval.
 struct TriggerSettingsView: View {
-    @ObservedObject private var store = TriggerStore.shared
-    @ObservedObject private var usage = UsageStore.shared
-    @ObservedObject private var safety = TriggerSafetyStore.shared
+    @ObservedObject var store = TriggerStore.shared
+    @ObservedObject var usage = UsageStore.shared
+    @ObservedObject var safety = TriggerSafetyStore.shared
 
-    @State private var allSessions: [ScannedSession] = []
-    @State private var scanning = false
-    @State private var tool: TriggerTool = .claude
-    @State private var selectedID: String?
-    @State private var message = "继续"
-    @State private var mode: TriggerMode = .afterReset
-    @State private var hours = 5
+    @State var allSessions: [ScannedSession] = []
+    @State var scanning = false
+    @State var tool: TriggerTool = .claude
+    @State var selectedID: String?
+    @State var message = "继续"
+    @State var mode: TriggerMode = .afterReset
+    @State var hours = 5
 
-    private static let rel: RelativeDateTimeFormatter = {
+    static let rel: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
         f.locale = L10n.locale
         f.unitsStyle = .abbreviated
         return f
     }()
 
-    private var toolSessions: [ScannedSession] {
+    var toolSessions: [ScannedSession] {
         allSessions.filter { $0.tool == tool }
     }
 
@@ -33,7 +33,6 @@ struct TriggerSettingsView: View {
             safetySection
             existingList
             addCard
-            sessionsList
         }
         .padding(.horizontal, 14)
         .padding(.top, 18)
@@ -112,7 +111,7 @@ struct TriggerSettingsView: View {
             ForEach(rows) { trigger in
                 SettingsRow(title: trigger.label, subtitle: subtitle(trigger)) {
                     HStack(spacing: 8) {
-                        PillButton(label: safety.isAllowed(cwd: trigger.cwd) ? "Untrust" : "Trust") {
+                        PillButton(label: safety.isAllowed(cwd: trigger.cwd) ? "Disallow resume" : "Allow resume") {
                             safety.setAllowed(cwd: trigger.cwd, !safety.isAllowed(cwd: trigger.cwd))
                         }
                         PillButton(label: "Run") { TriggerEngine.shared.fire(trigger) }
@@ -225,116 +224,4 @@ struct TriggerSettingsView: View {
         }
     }
 
-    private var sessionsList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Active sessions").padding(.top, 14)
-            if allSessions.isEmpty {
-                Text(L10n.tr(scanning ? "Scanning…" : "No active threads found."))
-                    .font(Typography.label)
-                    .foregroundStyle(.white.opacity(0.36))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 10)
-            } else {
-                ForEach(Array(allSessions.prefix(8))) { session in
-                    SettingsRow(
-                        title: session.label,
-                        subtitle: sessionSubtitle(session),
-                        dot: color(session.tool),
-                        chip: session.status.label.uppercased()
-                    ) {
-                        if !session.cwd.isEmpty {
-                            PillButton(label: safety.isAllowed(cwd: session.cwd) ? "Trusted" : "Trust") {
-                                safety.setAllowed(cwd: session.cwd, true)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Helpers
-
-    private var resetCaption: String? {
-        let reset = (tool == .claude ? usage.claude : usage.codex).fiveHour.resetAt
-        guard let reset else { return L10n.tr("%@: reset time loads with usage data.", tool.display) }
-        return L10n.tr("%@ resets %@", tool.display, Self.rel.localizedString(for: reset, relativeTo: Date()))
-    }
-
-    private func selectFirst() {
-        selectedID = toolSessions.first?.id
-    }
-
-    private func addTrigger() {
-        guard let id = selectedID,
-              let session = allSessions.first(where: { $0.id == id }) else { return }
-        store.add(Trigger(
-            tool: session.tool,
-            sessionId: session.sessionId,
-            label: session.label,
-            cwd: session.cwd,
-            message: message.isEmpty ? "继续" : message,
-            mode: mode,
-            everyHours: hours,
-            enabled: true,
-            lastFired: mode == .everyHours ? Date() : nil
-        ))
-    }
-
-    private func loadSessions() async {
-        scanning = true
-        let found = await Task.detached(priority: .userInitiated) { SessionScanner.scan() }.value
-        allSessions = found
-        if selectedID == nil || allSessions.first(where: { $0.id == selectedID }) == nil {
-            selectFirst()
-        }
-        scanning = false
-    }
-
-    private func subtitle(_ trigger: Trigger) -> String {
-        let when = trigger.mode == .afterReset
-            ? L10n.tr("after reset")
-            : L10n.tr("every %dh", trigger.everyHours)
-        var parts = ["「\(trigger.message)」", when]
-        parts.append(safety.isAllowed(cwd: trigger.cwd) ? L10n.tr("trusted") : L10n.tr("not trusted"))
-        if safety.dryRun { parts.append(L10n.tr("dry-run")) }
-        parts.append(TriggerEngine.shared.preview(for: trigger))
-        if let last = trigger.lastFired {
-            parts.append(L10n.tr("fired %@", Self.rel.localizedString(for: last, relativeTo: Date())))
-        }
-        return parts.joined(separator: " · ")
-    }
-
-    private func sessionSubtitle(_ session: ScannedSession) -> String {
-        let time = Self.rel.localizedString(for: session.modified, relativeTo: Date())
-        let cwd = session.cwd.isEmpty ? L10n.tr("no project directory") : session.cwd
-        return "\(session.tool.display) · \(session.status.label) · \(time) · \(cwd)"
-    }
-
-    private func color(_ tool: TriggerTool) -> Color {
-        tool == .claude ? IslandColor.claude : IslandColor.codex
-    }
-
-    @ViewBuilder
-    private func sectionLabel(_ text: String) -> some View {
-        Text(L10n.tr(text))
-            .font(Typography.sectionLabel)
-            .tracking(1.05)
-            .textCase(.uppercase)
-            .foregroundStyle(.white.opacity(0.34))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
-    }
-
-    @ViewBuilder
-    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            Text(L10n.tr(label))
-                .font(Typography.label)
-                .foregroundStyle(.white.opacity(0.55))
-                .frame(width: 52, alignment: .leading)
-            content()
-            Spacer(minLength: 0)
-        }
-    }
 }
