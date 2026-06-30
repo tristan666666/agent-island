@@ -5,10 +5,10 @@ struct TurnAlarmView: View {
     let provider: AlertEngine.Provider
     let providerName: String
     let thread: ActivityMonitor.ActiveThread?
-    let pauseSound: () -> Void
+    @ObservedObject var windowState: TurnAlarmWindowState
     let dismiss: () -> Void
+    let zoom: () -> Void
 
-    private let size = TurnAlarmWindowController.panelSize
     @ObservedObject private var reminders = AgentReminderStore.shared
     @State private var glowPulse = false
 
@@ -17,7 +17,7 @@ struct TurnAlarmView: View {
             alarmBackground
 
             VStack(spacing: 0) {
-                Spacer(minLength: 18)
+                Spacer(minLength: 42)
 
                 TurnAlarmProviderMark(provider: provider, providerColor: providerColor)
                     .padding(.bottom, 20)
@@ -67,38 +67,37 @@ struct TurnAlarmView: View {
                 }
                 .buttonStyle(.plain)
 
-                if reminders.soundEnabled {
-                    Button {
-                        pauseSound()
-                    } label: {
-                        Text(L10n.tr("Pause sound"))
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.88))
-                            .frame(width: 154, height: 36)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.white.opacity(0.10))
-                                    .overlay {
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
-                                    }
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 14)
+                Button {
+                    dismiss()
+                } label: {
+                    Text(L10n.tr("I know"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.86))
+                        .frame(width: 396, height: 42)
+                        .background {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.white.opacity(0.08))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
+                                }
+                        }
                 }
+                .buttonStyle(.plain)
+                .padding(.top, 12)
 
                 Spacer(minLength: 18)
-
-                if reminders.soundEnabled {
-                    TurnAlarmRingingStrip(providerColor: providerColor)
-                        .padding(.bottom, 18)
-                }
             }
             .padding(.horizontal, 28)
+
+            TurnAlarmWindowControls(dismiss: dismiss, zoom: zoom)
+                .padding(.top, 14)
+                .padding(.leading, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: size.width, height: size.height)
-        .background(Color(red: 0.020, green: 0.020, blue: 0.027))
+        .frame(width: windowState.size.width, height: windowState.size.height)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(Color.clear)
         .preferredColorScheme(.dark)
         .onAppear(perform: startAnimations)
     }

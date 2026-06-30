@@ -1,13 +1,6 @@
 import Foundation
 import SwiftUI
 
-/// User preference for the silhouette width on Macs without a hardware
-/// notch. On notched targets the preference is irrelevant — the model
-/// uses the real notch width directly.
-///
-/// Default is `.compact` (100pt). Existing non-notch users see the
-/// silhouette tighten on first launch after upgrade — silent
-/// migration, no opt-in.
 @MainActor
 final class IslandSpacingStore: ObservableObject {
     static let shared = IslandSpacingStore()
@@ -28,6 +21,13 @@ final class IslandSpacingStore: ObservableObject {
             switch self {
             case .compact:    return IslandSpacingStore.compactWidth
             case .notchStyle: return IslandSpacingStore.notchStyleWidth
+            }
+        }
+
+        var displayLabel: String {
+            switch self {
+            case .compact: return "No-notch Mac"
+            case .notchStyle: return "Notched Mac"
             }
         }
     }

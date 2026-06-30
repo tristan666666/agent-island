@@ -113,12 +113,12 @@ final class IslandModel: ObservableObject {
         ScreenPref.shared.screen = screen
     }
 
-    /// Substitutes the user's chosen non-notch width for the detected
-    /// fallback. On notched screens the raw notch is returned untouched —
-    /// the override is meaningless there (you can't shrink a physical
-    /// notch).
+    /// Applies the user's display mode while preserving the physical notch as
+    /// the minimum width on MacBooks that have one.
     private static func applyOverride(to raw: NotchInfo, width: CGFloat) -> NotchInfo {
-        if raw.hasNotch { return raw }
+        if raw.hasNotch {
+            return NotchInfo(width: max(raw.width, width), height: raw.height, hasNotch: true)
+        }
         return NotchInfo(width: width, height: raw.height, hasNotch: false)
     }
 

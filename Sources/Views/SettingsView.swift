@@ -142,18 +142,8 @@ struct SettingsView: View {
             chartSection
             costStyleSection
             targetDisplaySection
-            if spacingSectionVisible {
-                spacingSection
-            }
+            displayModeSection
         }
-    }
-
-    /// Shown when the island is currently rendered on a non-notched
-    /// display (whether by Auto or by an explicit user pick of an
-    /// external). Reads the same resolver the window controller uses, so
-    /// the gate stays in sync with where the island actually is.
-    private var spacingSectionVisible: Bool {
-        DisplayInfo.currentTarget()?.notch.hasNotch == false
     }
 
     private var providersTab: some View {
@@ -668,14 +658,14 @@ struct SettingsView: View {
         .padding(.bottom, 14)
     }
 
-    private var spacingSection: some View {
+    private var displayModeSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Spacing")
+            sectionLabel("Display mode")
             SettingsRow(
-                title: "Island width",
-                subtitle: "Tightens the gap between logos when the island is on a screen without a hardware notch."
+                title: "Mac mode",
+                subtitle: displayModeSubtitle
             ) {
-                spacingSegmented
+                displayModeSegmented
             }
         }
         .padding(.horizontal, 14)
@@ -683,14 +673,39 @@ struct SettingsView: View {
         .padding(.bottom, 14)
     }
 
-    /// Default-on-the-left: Compact is the new default, so it sits left
-    /// of Notch-style.
-    private var spacingSegmented: some View {
+    private var displayModeSubtitle: String {
+        let currentMode = L10n.tr(spacing.mode.displayLabel)
+        let targetName = DisplayInfo.currentTarget()?.name ?? L10n.tr("current display")
+        switch spacing.mode {
+        case .compact:
+            guard DisplayInfo.currentTarget()?.notch.hasNotch == true else {
+                return L10n.tr(
+                    "Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays.",
+                    currentMode,
+                    targetName
+                )
+            }
+            return L10n.tr(
+                "Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays. %@",
+                currentMode,
+                targetName,
+                L10n.tr("Hardware notch is kept as the minimum width.")
+            )
+        case .notchStyle:
+            return L10n.tr(
+                "Current mode: %@ on %@. Best for MacBooks with a camera notch.",
+                currentMode,
+                targetName
+            )
+        }
+    }
+
+    private var displayModeSegmented: some View {
         SegmentedControl(
             items: [IslandSpacingStore.Mode.compact, .notchStyle],
             selected: $spacing.mode,
-            label: { $0 == .compact ? "Compact" : "Notch-style" },
-            accessibilityPrefix: "Island width"
+            label: { $0.displayLabel },
+            accessibilityPrefix: "Display mode"
         )
     }
 

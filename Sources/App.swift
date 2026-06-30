@@ -58,10 +58,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showDemoTurnAlarmIfNeeded() {
-        guard AppEnvironment.isDemo,
-              let raw = ProcessInfo.processInfo.environment["AGENTISLAND_DEMO_TURN_ALARM"] else { return }
+        guard let raw = ProcessInfo.processInfo.environment["AGENTISLAND_DEMO_TURN_ALARM"] else { return }
         let provider: AlertEngine.Provider = raw.lowercased() == "claude" ? .claude : .codex
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 600_000_000)
             let thread = ActivityMonitor.ActiveThread(
                 sessionId: "00000000-0000-0000-0000-000000000000",
                 label: L10n.tr("Demo thread"),

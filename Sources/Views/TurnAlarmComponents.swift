@@ -1,6 +1,61 @@
 import AppKit
 import SwiftUI
 
+struct TurnAlarmWindowControls: View {
+    let dismiss: () -> Void
+    let zoom: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            TurnAlarmTrafficLightButton(
+                color: Color(red: 1.0, green: 0.376, blue: 0.341),
+                symbol: "xmark",
+                action: dismiss
+            )
+            TurnAlarmTrafficLightButton(
+                color: Color(red: 1.0, green: 0.741, blue: 0.180),
+                symbol: "minus",
+                action: dismiss
+            )
+            TurnAlarmTrafficLightButton(
+                color: Color(red: 0.157, green: 0.800, blue: 0.251),
+                symbol: "plus",
+                action: zoom
+            )
+        }
+        .frame(height: 20)
+    }
+}
+
+private struct TurnAlarmTrafficLightButton: View {
+    let color: Color
+    let symbol: String
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .overlay {
+                        Circle()
+                            .strokeBorder(.black.opacity(0.18), lineWidth: 0.5)
+                    }
+                Image(systemName: symbol)
+                    .font(.system(size: 6.2, weight: .bold))
+                    .foregroundStyle(.black.opacity(isHovering ? 0.52 : 0))
+                    .animation(.easeOut(duration: 0.10), value: isHovering)
+            }
+            .frame(width: 12, height: 12)
+            .frame(width: 20, height: 20)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+    }
+}
+
 struct TurnAlarmProviderMark: View {
     let provider: AlertEngine.Provider
     let providerColor: Color
@@ -109,37 +164,5 @@ struct TurnAlarmMetadata: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 13)
-    }
-}
-
-struct TurnAlarmRingingStrip: View {
-    let providerColor: Color
-    @State private var ringPulse = false
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "waveform")
-                .font(.system(size: 18, weight: .bold))
-                .scaleEffect(ringPulse ? 1.14 : 0.88)
-                .opacity(ringPulse ? 1.0 : 0.58)
-            Text(L10n.tr("Ringing until dismissed"))
-                .font(.system(size: 14, weight: .bold))
-                .lineLimit(1)
-        }
-        .foregroundStyle(providerColor)
-        .frame(width: 418, height: 42)
-        .background {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.06))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(.white.opacity(0.06), lineWidth: 0.5)
-                }
-        }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 0.72).repeatForever(autoreverses: true)) {
-                ringPulse = true
-            }
-        }
     }
 }

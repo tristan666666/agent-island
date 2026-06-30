@@ -46,11 +46,19 @@
 "Counts everything — input, output, and cache. Mirrors ccusage." = "统计所有 token：输入、输出和缓存；与 ccusage 一致。";
 "Crit" = "危急";
 "Critical" = "危急";
+"Current mode" = "当前模式";
+"Current mode: %@" = "当前模式：%@";
+"Current mode: %@ on %@. Best for MacBooks with a camera notch." = "当前模式：%@，显示在 %@。适合有摄像头刘海的 MacBook。";
+"Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays." = "当前模式：%@，显示在 %@。适合旧款 MacBook、台式 Mac 和外接显示器。";
+"Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays. %@" = "当前模式：%@，显示在 %@。适合旧款 MacBook、台式 Mac 和外接显示器。%@";
+"current display" = "当前显示器";
 "Daily token usage in %@" = "%@ 年每日 token 用量";
 "Display" = "显示";
+"Display mode" = "显示模式";
 "General" = "通用";
 "Follows macOS" = "跟随 macOS";
 "Glow only on refresh, hover, or limit alerts." = "仅在刷新、悬停或限额提醒时显示辉光。";
+"Hardware notch is kept as the minimum width." = "真实刘海宽度会作为最小宽度保留。";
 "Idle" = "空闲";
 "idle" = "空闲";
 "Input + output" = "输入 + 输出";
@@ -65,11 +73,14 @@
 "Live" = "实时";
 "Look for a new version immediately." = "立即检查是否有新版本。";
 "Low Power Mode" = "低功耗模式";
+"Mac mode" = "Mac 显示模式";
 "Mixed Use" = "混合使用";
 "Mostly Claude" = "主要是 Claude";
 "Mostly Codex" = "主要是 Codex";
 "no %@ activity in last 5h or this week" = "过去 5 小时或本周没有 %@ 活动";
 "No Activity" = "无活动";
+"No-notch Mac" = "无刘海模式";
+"Notched Mac" = "有刘海模式";
 "Notch-style" = "刘海样式";
 "Numeric" = "数字";
 "Open AgentIsland when you sign in." = "登录系统时打开 AgentIsland。";
@@ -99,7 +110,6 @@
 "Settings" = "设置";
 "Show on" = "显示在";
 "Sparkline" = "折线";
-"Spacing" = "间距";
 "Stepped" = "阶梯";
 "Claude stale" = "Claude 数据过期";
 "Codex stale" = "Codex 数据过期";
@@ -149,7 +159,6 @@
 "resets in %d hours" = "%d 小时后重置";
 "resets in %d minutes" = "%d 分钟后重置";
 "Swipe to change pages." = "滑动切换页面。";
-"Tightens the gap between logos when the island is on a screen without a hardware notch." = "在没有硬件刘海的屏幕上收紧图标之间的间距。";
 
 /* Auto-Trigger (Triggers tab) */
 "Triggers" = "自动触发";
@@ -279,8 +288,7 @@
 "%@ is waiting" = "%@ 正在等你";
 "The thread finished. Come back and reply." = "线程已结束，请回来回复。";
 "Open thread" = "回去处理";
-"Pause sound" = "暂停声音";
-"Ringing until dismissed" = "会持续响铃直到关闭";
+"I know" = "我知道了";
 "Alarm provider" = "提供商";
 "Alarm thread" = "线程";
 "Alarm project" = "项目";
