@@ -1,5 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/(server(\\.|%2e)mjs|package(\\.|%2e)json|vercel(\\.|%2e)json|tests(/|%2f).*|\\.gitignore|%2egitignore|\\.env.*|%2eenv.*|\\.vercel/.*|%2evercel(/|%2f).*)",
+      "status": 404,
+      "dest": "/404.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "status": 404,
+      "dest": "/404.html"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

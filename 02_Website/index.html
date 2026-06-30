@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agent Island - Your AI night-watch for macOS</title>
+    <title>Agent Island - Open-source AI night-watch for macOS</title>
     <meta name="description" content="Agent Island is an open-source macOS utility that watches Claude Code and Codex sessions, then calls you back when it is your turn." />
-    <meta property="og:title" content="Agent Island - Your AI night-watch for macOS" />
-    <meta property="og:description" content="Open-source macOS utility for Claude Code and Codex runs. Live state in the notch, GitHub source, and local-first guardrails." />
+    <meta property="og:title" content="Agent Island - Open-source AI night-watch for macOS" />
+    <meta property="og:description" content="GitHub-first macOS utility for Claude Code and Codex runs: live notch state, source build path, release proof, and local-first guardrails." />
     <meta property="og:image" content="./assets/social-preview.png" />
     <meta property="og:type" content="website" />
     <link rel="icon" href="./assets/agentisland_logo.png" />
@@ -19,111 +19,113 @@
         <span>Agent Island</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="#proof" data-i18n="nav.proof">Open Source</a>
-        <a href="#how" data-i18n="nav.how">How It Works</a>
-        <a href="#get-started" data-i18n="nav.getStarted">Get Started</a>
-        <a href="#trust" data-i18n="nav.trust">Trust</a>
-        <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
+        <a href="#proof">Open Source</a>
+        <a href="#how">Handoff</a>
+        <a href="#get-started">Get Started</a>
+        <a href="#trust">Trust</a>
       </nav>
       <div class="header-actions">
         <div class="language-switch" aria-label="Language">
           <a class="is-active" href="./" hreflang="en">EN</a>
           <a href="./zh/" hreflang="zh-CN">中</a>
         </div>
-        <a class="header-cta" href="https://github.com/tristan666666/agent-island/releases/download/v1.1.0/AgentIsland-1.1.0.dmg" data-i18n="cta.download">Download</a>
+        <a class="header-cta" href="https://github.com/tristan666666/agent-island" rel="noreferrer">Star on GitHub</a>
       </div>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-media" aria-label="Agent Island product demo frame">
-          <video class="hero-video" poster="./assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
-            <source src="./assets/agent-island-hero-demo.mp4" type="video/mp4" />
-          </video>
-          <div class="media-overlay">
-            <div class="notch-pill">
-              <span class="provider provider-claude">Claude</span>
-              <span class="provider provider-codex">Codex</span>
+        <div class="hero-shell">
+          <div class="hero-copy">
+            <p class="eyebrow">Open-source macOS utility / MIT / v1.1.0</p>
+            <h1 id="hero-title">Agent Island</h1>
+            <p class="hero-kicker">Your AI night-watch for Claude Code and Codex runs.</p>
+            <p class="hero-subtitle">It watches long-running agent sessions in the background, then makes the handoff visible when a run is done, stalled, rate-limited, or waiting for you.</p>
+            <div class="hero-actions" aria-label="Primary actions">
+              <a class="primary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer">View on GitHub</a>
+              <a class="secondary-action" href="#get-started">Get Started</a>
+              <a class="text-action" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Latest release v1.1.0</a>
             </div>
-            <div class="callout">
-              <span data-i18n="hero.calloutMeta">Background run finished</span>
-              <strong data-i18n="hero.callout">It's your turn</strong>
+            <div class="hero-command" aria-label="Source build command">
+              <div>
+                <span>source build</span>
+                <button type="button" data-copy-command data-copy-label="Copy" data-copied-label="Copied">Copy</button>
+              </div>
+              <pre><code data-command>git clone https://github.com/tristan666666/agent-island.git
+cd agent-island
+./scripts/verify.sh</code></pre>
             </div>
           </div>
-          <div class="state-rail" aria-label="Session state progression">
-            <button class="state-step is-active" type="button" data-state="working">
-              <span></span>
-              <strong data-i18n="states.workingTitle">Working</strong>
-              <small data-i18n="states.workingBody">Claude running</small>
-            </button>
-            <button class="state-step" type="button" data-state="turn">
-              <span></span>
-              <strong data-i18n="states.turnTitle">Your turn</strong>
-              <small data-i18n="states.turnBody">Answer now</small>
-            </button>
-            <button class="state-step" type="button" data-state="stalled">
-              <span></span>
-              <strong data-i18n="states.stalledTitle">Stalled</strong>
-              <small data-i18n="states.stalledBody">Needs attention</small>
-            </button>
-            <button class="state-step" type="button" data-state="resume">
-              <span></span>
-              <strong data-i18n="states.resumeTitle">Resume</strong>
-              <small data-i18n="states.resumeBody">Trusted trigger</small>
-            </button>
+
+          <div class="hero-proof" aria-label="Agent Island product proof">
+            <div class="demo-frame">
+              <video class="hero-video" poster="./assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
+                <source src="./assets/agent-island-hero-demo.mp4" type="video/mp4" />
+              </video>
+              <div class="island-signal" aria-hidden="true">
+                <span>Claude</span>
+                <strong>Your turn</strong>
+                <span>Codex</span>
+              </div>
+            </div>
+            <div class="state-rail" aria-label="Session states">
+              <button class="state-step is-active" type="button" data-step="01" data-title="Working quietly" data-body="The transcript is still changing, so the island breathes instead of interrupting you." data-progress="25%">
+                <span></span>
+                <strong>Working</strong>
+                <small>agent still running</small>
+              </button>
+              <button class="state-step" type="button" data-step="02" data-title="Your turn" data-body="A turn-complete marker appears. The island brightens and makes the handoff obvious." data-progress="50%">
+                <span></span>
+                <strong>Your turn</strong>
+                <small>answer now</small>
+              </button>
+              <button class="state-step" type="button" data-step="03" data-title="Stalled state" data-body="When output freezes too long, the red state and sound tell you this needs attention." data-progress="75%">
+                <span></span>
+                <strong>Stalled</strong>
+                <small>needs attention</small>
+              </button>
+              <button class="state-step" type="button" data-step="04" data-title="Trusted resume" data-body="Known repeatable flows can continue locally, with the permission boundary named." data-progress="100%">
+                <span></span>
+                <strong>Resume</strong>
+                <small>trusted trigger</small>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="hero-copy">
-          <p class="surface-tags">
-            <span>Open-source</span>
-            <span>macOS 13+</span>
-            <span>Menu bar + notch</span>
-          </p>
-          <h1 id="hero-title" data-i18n="hero.title">Your AI night-watch. Calls you back.</h1>
-          <p class="hero-subtitle" data-i18n="hero.subtitle">Agent Island watches Claude Code and Codex sessions in the background, then makes the handoff visible when a run is done, stalled, rate-limited, or waiting for you.</p>
-          <div class="hero-actions">
-            <a class="primary-action" href="https://github.com/tristan666666/agent-island/releases/download/v1.1.0/AgentIsland-1.1.0.dmg" data-i18n="cta.downloadMac">Download for macOS</a>
-            <a class="secondary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer" data-i18n="cta.clone">View source</a>
-            <a class="ghost-action" href="#get-started" data-i18n="cta.started">Get Started</a>
-          </div>
-          <p class="release-note" data-i18n="hero.release">Free and open source. Current release v1.1.0.</p>
+        <div class="source-strip" aria-label="Open-source proof">
+          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">
+            <span>GitHub</span>
+            <strong>8 stars</strong>
+          </a>
+          <a href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
+            <span>Forks</span>
+            <strong>3</strong>
+          </a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
+            <span>License</span>
+            <strong>MIT</strong>
+          </a>
+          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">
+            <span>Listed</span>
+            <strong>awesome-mac</strong>
+          </a>
         </div>
       </section>
 
       <section class="proof-section" id="proof">
-        <div class="section-inner">
+        <div class="section-inner proof-layout">
           <div class="section-lead">
-            <h2 data-i18n="proof.title">Built in the open. Useful before it looks big.</h2>
-            <p data-i18n="proof.body">This is a small public Mac utility, not a hidden SaaS service. The repo, releases, license, and directory listings stay visible on the homepage.</p>
+            <p class="section-label">Repository proof</p>
+            <h2>Built like a project people can inspect.</h2>
           </div>
-          <div class="proof-grid" aria-label="Open-source proof">
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island" rel="noreferrer">
-              <span>GitHub</span>
-              <strong>8</strong>
-              <small data-i18n="proof.stars">stars</small>
-            </a>
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
-              <span>Forks</span>
-              <strong>3</strong>
-              <small data-i18n="proof.forks">forks</small>
-            </a>
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">
-              <span>Release</span>
-              <strong>v1.1.0</strong>
-              <small>2026-06-27</small>
-            </a>
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
-              <span>License</span>
-              <strong>MIT</strong>
-              <small data-i18n="proof.license">open source</small>
-            </a>
-          </div>
-          <div class="directory-strip">
-            <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
-            <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps/blob/main/README.md#ai" rel="noreferrer">awesome-swift-macOS</a>
-            <a href="https://github.com/milisp/awesome-codex-cli" rel="noreferrer">awesome-codex-cli</a>
-            <a href="https://github.com/kailiu42/awesome-coding-agents" rel="noreferrer">awesome-coding-agents</a>
+          <div class="proof-copy">
+            <p>The homepage leads with the repo, version, license, and source build path because Agent Island is closer to a useful open-source Mac tool than a hosted SaaS brand page.</p>
+            <div class="proof-links">
+              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">Repository</a>
+              <a href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Release v1.1.0</a>
+              <a href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">README</a>
+            </div>
           </div>
         </div>
       </section>
@@ -131,14 +133,15 @@
       <section class="scroll-story" id="how">
         <div class="section-inner story-layout">
           <div class="story-copy">
-            <h2 data-i18n="how.title">Scroll through the handoff.</h2>
-            <p data-i18n="how.body">The interaction mirrors the product: a run starts, the agent finishes, the island calls you back, and an optional trusted trigger can continue a known-safe flow.</p>
+            <p class="section-label">Scroll handoff</p>
+            <h2>The page behaves like the product.</h2>
+            <p>As you scroll, the state moves from quiet monitoring to a clear handoff, then to stalled and trusted resume states.</p>
           </div>
           <div class="story-stage" aria-live="polite">
-            <div class="stage-card" data-stage-panel>
+            <div class="stage-panel" data-stage-panel>
               <span class="stage-index">01</span>
-              <h3 data-i18n="story.workingTitle">Working quietly</h3>
-              <p data-i18n="story.workingBody">The session transcript is still changing, so the logo breathes instead of interrupting you.</p>
+              <h3>Working quietly</h3>
+              <p>The transcript is still changing, so the island breathes instead of interrupting you.</p>
             </div>
             <div class="stage-progress">
               <span data-stage-progress></span>
@@ -149,18 +152,19 @@
 
       <section class="screens-section">
         <div class="section-inner">
-          <div class="section-lead">
-            <h2 data-i18n="screens.title">Real product surfaces, not abstract cards.</h2>
-            <p data-i18n="screens.body">The homepage uses the same screenshots people inspect in the repo: usage state, reset timing, and auto-trigger setup.</p>
+          <div class="section-lead wide">
+            <p class="section-label">Product surfaces</p>
+            <h2>Real screenshots, not abstract UI tiles.</h2>
+            <p>The same surfaces a contributor can inspect in the repo: usage state, reset timing, and local auto-trigger setup.</p>
           </div>
           <div class="screens-grid">
             <figure>
               <img src="./assets/agent-island-usage.png" alt="Agent Island usage and reset status" />
-              <figcaption data-i18n="screens.usage">Usage, reset timing, and live status in the compact island.</figcaption>
+              <figcaption>Usage, reset timing, and live status inside the compact island.</figcaption>
             </figure>
             <figure>
               <img src="./assets/agent-island-auto-trigger.png" alt="Agent Island auto trigger settings" />
-              <figcaption data-i18n="screens.trigger">Local trigger setup for known repeatable Claude/Codex flows.</figcaption>
+              <figcaption>Local trigger setup for known repeatable Claude and Codex flows.</figcaption>
             </figure>
           </div>
         </div>
@@ -169,35 +173,29 @@
       <section class="install-section" id="get-started">
         <div class="section-inner install-layout">
           <div>
-            <h2 data-i18n="install.title">Get started from the release or the source.</h2>
-            <p data-i18n="install.body">Download the DMG for the fastest path, or clone the repo and run the verification script locally.</p>
-            <div class="install-actions">
-              <a class="primary-action dark" href="https://github.com/tristan666666/agent-island/releases/download/v1.1.0/AgentIsland-1.1.0.dmg" data-i18n="cta.downloadVersion">Download v1.1.0</a>
-              <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer" data-i18n="install.readme">Read README</a>
-            </div>
+            <p class="section-label">Get Started</p>
+            <h2>Start from source. Use the release when you need speed.</h2>
+            <p>Clone the repository for the full build path, or open the latest release page for the signed Sparkle update assets and current DMG.</p>
           </div>
-          <div class="code-window">
-            <div class="code-title">
-              <span></span><span></span><span></span>
-              <strong>source build</strong>
-              <button type="button" data-copy-command data-i18n="install.copy">Copy</button>
-            </div>
-            <pre><code data-command>git clone https://github.com/tristan666666/agent-island.git
-cd agent-island
-./scripts/verify.sh
-open build/AgentIsland.app</code></pre>
+          <div class="install-actions">
+            <a class="primary-action dark" href="https://github.com/tristan666666/agent-island" rel="noreferrer">View source</a>
+            <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">Read README</a>
+            <a class="release-link" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Release page</a>
           </div>
         </div>
       </section>
 
       <section class="trust-section" id="trust">
         <div class="section-inner trust-layout">
-          <h2 data-i18n="trust.title">Local-first, with the sharp edges named.</h2>
+          <div>
+            <p class="section-label">Trust boundary</p>
+            <h2>Local-first, with the sharp edges named.</h2>
+          </div>
           <ul>
-            <li data-i18n="trust.local">Runs as a Mac utility, not a hosted service.</li>
-            <li data-i18n="trust.state">Reads local transcript state to tell whether a session is working, done, or stalled.</li>
-            <li data-i18n="trust.resume">Auto-resume uses dangerous permission-bypass flags, so only trusted sessions should be attached.</li>
-            <li data-i18n="trust.logs">Trigger run logs stay under your local Application Support folder.</li>
+            <li>Runs as a Mac utility, not a hosted service.</li>
+            <li>Reads local transcript state to tell whether a session is working, done, or stalled.</li>
+            <li>Auto-resume uses dangerous permission-bypass flags, so only trusted sessions should be attached.</li>
+            <li>Trigger run logs stay under your local Application Support folder.</li>
           </ul>
         </div>
       </section>
@@ -205,7 +203,7 @@ open build/AgentIsland.app</code></pre>
 
     <footer class="site-footer">
       <span>Agent Island</span>
-      <span data-i18n="footer.note">Open-source macOS utility for Claude Code and Codex users.</span>
+      <span>Open-source macOS utility for Claude Code and Codex users.</span>
       <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
     </footer>
 

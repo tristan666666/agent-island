@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agent Island - 你的 macOS AI 守夜人</title>
-    <meta name="description" content="Agent Island 是一个开源 macOS 小工具，用来盯住 Claude Code 和 Codex 会话，并在该你接手时把你叫回来。" />
-    <meta property="og:title" content="Agent Island - 你的 macOS AI 守夜人" />
-    <meta property="og:description" content="给 Claude Code 和 Codex 长任务用的开源 macOS 工具。刘海状态、GitHub 源码和本地优先边界。" />
+    <title>Agent Island - 开源 macOS AI 守夜人</title>
+    <meta name="description" content="Agent Island 是一个开源 macOS 工具，用来盯住 Claude Code 和 Codex 会话，并在该你接手时把你叫回来。" />
+    <meta property="og:title" content="Agent Island - 开源 macOS AI 守夜人" />
+    <meta property="og:description" content="GitHub 优先的 macOS 工具：刘海状态、源码构建路径、版本证明和本地优先边界。" />
     <meta property="og:image" content="../assets/social-preview.png" />
     <meta property="og:type" content="website" />
     <link rel="icon" href="../assets/agentisland_logo.png" />
@@ -14,116 +14,118 @@
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="Agent Island home">
+      <a class="brand" href="#top" aria-label="Agent Island 首页">
         <img src="../assets/agentisland_logo.png" alt="" />
         <span>Agent Island</span>
       </a>
-      <nav aria-label="Primary navigation">
-        <a href="#proof" data-i18n="nav.proof">Open Source</a>
-        <a href="#how" data-i18n="nav.how">How It Works</a>
-        <a href="#get-started" data-i18n="nav.getStarted">Get Started</a>
-        <a href="#trust" data-i18n="nav.trust">Trust</a>
-        <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
+      <nav aria-label="主导航">
+        <a href="#proof">开源证明</a>
+        <a href="#how">接手过程</a>
+        <a href="#get-started">开始使用</a>
+        <a href="#trust">信任边界</a>
       </nav>
       <div class="header-actions">
-        <div class="language-switch" aria-label="Language">
+        <div class="language-switch" aria-label="语言">
           <a href="../" hreflang="en">EN</a>
           <a class="is-active" href="./" hreflang="zh-CN">中</a>
         </div>
-        <a class="header-cta" href="https://github.com/tristan666666/agent-island/releases/download/v1.1.0/AgentIsland-1.1.0.dmg" data-i18n="cta.download">Download</a>
+        <a class="header-cta" href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub 标星</a>
       </div>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-media" aria-label="Agent Island product demo frame">
-          <video class="hero-video" poster="../assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
-            <source src="../assets/agent-island-hero-demo.mp4" type="video/mp4" />
-          </video>
-          <div class="media-overlay">
-            <div class="notch-pill">
-              <span class="provider provider-claude">Claude</span>
-              <span class="provider provider-codex">Codex</span>
+        <div class="hero-shell">
+          <div class="hero-copy">
+            <p class="eyebrow">开源 macOS 工具 / MIT / v1.1.0</p>
+            <h1 id="hero-title">Agent Island</h1>
+            <p class="hero-kicker">给 Claude Code 和 Codex 长任务用的 AI 守夜人。</p>
+            <p class="hero-subtitle">它在后台盯住长时间运行的 agent 会话。当任务完成、卡住、触达额度，或者正在等你输入时，它会把接手机会变得可见。</p>
+            <div class="hero-actions" aria-label="主要操作">
+              <a class="primary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer">在 GitHub 上查看</a>
+              <a class="secondary-action" href="#get-started">开始使用</a>
+              <a class="text-action" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">最新版本 v1.1.0</a>
             </div>
-            <div class="callout">
-              <span data-i18n="hero.calloutMeta">Background run finished</span>
-              <strong data-i18n="hero.callout">It's your turn</strong>
+            <div class="hero-command" aria-label="源码构建命令">
+              <div>
+                <span>源码构建</span>
+                <button type="button" data-copy-command data-copy-label="复制" data-copied-label="已复制">复制</button>
+              </div>
+              <pre><code data-command>git clone https://github.com/tristan666666/agent-island.git
+cd agent-island
+./scripts/verify.sh</code></pre>
             </div>
           </div>
-          <div class="state-rail" aria-label="Session state progression">
-            <button class="state-step is-active" type="button" data-state="working">
-              <span></span>
-              <strong data-i18n="states.workingTitle">Working</strong>
-              <small data-i18n="states.workingBody">Claude running</small>
-            </button>
-            <button class="state-step" type="button" data-state="turn">
-              <span></span>
-              <strong data-i18n="states.turnTitle">Your turn</strong>
-              <small data-i18n="states.turnBody">Answer now</small>
-            </button>
-            <button class="state-step" type="button" data-state="stalled">
-              <span></span>
-              <strong data-i18n="states.stalledTitle">Stalled</strong>
-              <small data-i18n="states.stalledBody">Needs attention</small>
-            </button>
-            <button class="state-step" type="button" data-state="resume">
-              <span></span>
-              <strong data-i18n="states.resumeTitle">Resume</strong>
-              <small data-i18n="states.resumeBody">Trusted trigger</small>
-            </button>
+
+          <div class="hero-proof" aria-label="Agent Island 产品证明">
+            <div class="demo-frame">
+              <video class="hero-video" poster="../assets/agent-island-hero-poster.png" autoplay muted loop playsinline controls>
+                <source src="../assets/agent-island-hero-demo.mp4" type="video/mp4" />
+              </video>
+              <div class="island-signal" aria-hidden="true">
+                <span>Claude</span>
+                <strong>该你了</strong>
+                <span>Codex</span>
+              </div>
+            </div>
+            <div class="state-rail" aria-label="会话状态">
+              <button class="state-step is-active" type="button" data-step="01" data-title="安静运行" data-body="会话记录还在变化时，岛只是呼吸，不会打断你。" data-progress="25%">
+                <span></span>
+                <strong>运行中</strong>
+                <small>agent 还在跑</small>
+              </button>
+              <button class="state-step" type="button" data-step="02" data-title="该你接手" data-body="轮次完成标记出现后，岛会变亮，把接手机会摆到你面前。" data-progress="50%">
+                <span></span>
+                <strong>该你了</strong>
+                <small>现在回复</small>
+              </button>
+              <button class="state-step" type="button" data-step="03" data-title="卡住状态" data-body="输出太久不动时，红色状态和声音会提醒你这需要处理。" data-progress="75%">
+                <span></span>
+                <strong>卡住了</strong>
+                <small>需要处理</small>
+              </button>
+              <button class="state-step" type="button" data-step="04" data-title="可信续跑" data-body="已知的重复流程可以在本地继续，但权限绕过边界必须说清楚。" data-progress="100%">
+                <span></span>
+                <strong>续跑</strong>
+                <small>可信触发</small>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="hero-copy">
-          <p class="surface-tags">
-            <span>Open-source</span>
-            <span>macOS 13+</span>
-            <span>Menu bar + notch</span>
-          </p>
-          <h1 id="hero-title" data-i18n="hero.title">Your AI night-watch. Calls you back.</h1>
-          <p class="hero-subtitle" data-i18n="hero.subtitle">Agent Island watches Claude Code and Codex sessions in the background, then makes the handoff visible when a run is done, stalled, rate-limited, or waiting for you.</p>
-          <div class="hero-actions">
-            <a class="primary-action" href="https://github.com/tristan666666/agent-island/releases/download/v1.1.0/AgentIsland-1.1.0.dmg" data-i18n="cta.downloadMac">Download for macOS</a>
-            <a class="secondary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer" data-i18n="cta.clone">View source</a>
-            <a class="ghost-action" href="#get-started" data-i18n="cta.started">Get Started</a>
-          </div>
-          <p class="release-note" data-i18n="hero.release">Free and open source. Current release v1.1.0.</p>
+        <div class="source-strip" aria-label="开源证明">
+          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">
+            <span>GitHub</span>
+            <strong>8 Stars</strong>
+          </a>
+          <a href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
+            <span>Forks</span>
+            <strong>3</strong>
+          </a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
+            <span>许可</span>
+            <strong>MIT</strong>
+          </a>
+          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">
+            <span>收录</span>
+            <strong>awesome-mac</strong>
+          </a>
         </div>
       </section>
 
       <section class="proof-section" id="proof">
-        <div class="section-inner">
+        <div class="section-inner proof-layout">
           <div class="section-lead">
-            <h2 data-i18n="proof.title">Built in the open. Useful before it looks big.</h2>
-            <p data-i18n="proof.body">This is a small public Mac utility, not a hidden SaaS service. The repo, releases, license, and directory listings stay visible on the homepage.</p>
+            <p class="section-label">仓库证明</p>
+            <h2>它应该像一个能被检查的项目。</h2>
           </div>
-          <div class="proof-grid" aria-label="Open-source proof">
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island" rel="noreferrer">
-              <span>GitHub</span>
-              <strong>8</strong>
-              <small data-i18n="proof.stars">stars</small>
-            </a>
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island/forks" rel="noreferrer">
-              <span>Forks</span>
-              <strong>3</strong>
-              <small data-i18n="proof.forks">forks</small>
-            </a>
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">
-              <span>Release</span>
-              <strong>v1.1.0</strong>
-              <small>2026-06-27</small>
-            </a>
-            <a class="proof-item" href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">
-              <span>License</span>
-              <strong>MIT</strong>
-              <small data-i18n="proof.license">open source</small>
-            </a>
-          </div>
-          <div class="directory-strip">
-            <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
-            <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps/blob/main/README.md#ai" rel="noreferrer">awesome-swift-macOS</a>
-            <a href="https://github.com/milisp/awesome-codex-cli" rel="noreferrer">awesome-codex-cli</a>
-            <a href="https://github.com/kailiu42/awesome-coding-agents" rel="noreferrer">awesome-coding-agents</a>
+          <div class="proof-copy">
+            <p>官网优先展示仓库、版本、许可和源码构建路径，因为 Agent Island 更像一个有用的开源 Mac 工具，而不是一个隐藏在品牌话术背后的 SaaS 页面。</p>
+            <div class="proof-links">
+              <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">仓库</a>
+              <a href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">版本 v1.1.0</a>
+              <a href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">中文 README</a>
+            </div>
           </div>
         </div>
       </section>
@@ -131,14 +133,15 @@
       <section class="scroll-story" id="how">
         <div class="section-inner story-layout">
           <div class="story-copy">
-            <h2 data-i18n="how.title">Scroll through the handoff.</h2>
-            <p data-i18n="how.body">The interaction mirrors the product: a run starts, the agent finishes, the island calls you back, and an optional trusted trigger can continue a known-safe flow.</p>
+            <p class="section-label">滚动接手</p>
+            <h2>页面交互要像产品本身。</h2>
+            <p>向下滚动时，状态会从安静监控变成清晰接手，再进入卡住提醒和可信续跑。</p>
           </div>
           <div class="story-stage" aria-live="polite">
-            <div class="stage-card" data-stage-panel>
+            <div class="stage-panel" data-stage-panel>
               <span class="stage-index">01</span>
-              <h3 data-i18n="story.workingTitle">Working quietly</h3>
-              <p data-i18n="story.workingBody">The session transcript is still changing, so the logo breathes instead of interrupting you.</p>
+              <h3>安静运行</h3>
+              <p>会话记录还在变化时，岛只是呼吸，不会打断你。</p>
             </div>
             <div class="stage-progress">
               <span data-stage-progress></span>
@@ -149,18 +152,19 @@
 
       <section class="screens-section">
         <div class="section-inner">
-          <div class="section-lead">
-            <h2 data-i18n="screens.title">Real product surfaces, not abstract cards.</h2>
-            <p data-i18n="screens.body">The homepage uses the same screenshots people inspect in the repo: usage state, reset timing, and auto-trigger setup.</p>
+          <div class="section-lead wide">
+            <p class="section-label">产品界面</p>
+            <h2>真实截图，不是抽象卡片。</h2>
+            <p>这里使用的就是贡献者可以在仓库里检查的界面：用量状态、重置时间和本地自动触发设置。</p>
           </div>
           <div class="screens-grid">
             <figure>
-              <img src="../assets/agent-island-usage.png" alt="Agent Island usage and reset status" />
-              <figcaption data-i18n="screens.usage">Usage, reset timing, and live status in the compact island.</figcaption>
+              <img src="../assets/agent-island-usage.png" alt="Agent Island 用量与重置状态" />
+              <figcaption>紧凑岛里的用量、重置时间和实时状态。</figcaption>
             </figure>
             <figure>
-              <img src="../assets/agent-island-auto-trigger.png" alt="Agent Island auto trigger settings" />
-              <figcaption data-i18n="screens.trigger">Local trigger setup for known repeatable Claude/Codex flows.</figcaption>
+              <img src="../assets/agent-island-auto-trigger.png" alt="Agent Island 自动触发设置" />
+              <figcaption>给可信重复 Claude 和 Codex 流程用的本地触发设置。</figcaption>
             </figure>
           </div>
         </div>
@@ -169,35 +173,29 @@
       <section class="install-section" id="get-started">
         <div class="section-inner install-layout">
           <div>
-            <h2 data-i18n="install.title">Get started from the release or the source.</h2>
-            <p data-i18n="install.body">Download the DMG for the fastest path, or clone the repo and run the verification script locally.</p>
-            <div class="install-actions">
-              <a class="primary-action dark" href="https://github.com/tristan666666/agent-island/releases/download/v1.1.0/AgentIsland-1.1.0.dmg" data-i18n="cta.downloadVersion">Download v1.1.0</a>
-              <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer" data-i18n="install.readme">Read README</a>
-            </div>
+            <p class="section-label">开始使用</p>
+            <h2>先从源码开始。需要最快路径时再看 Release。</h2>
+            <p>克隆仓库可以看到完整构建路径；最新 release 页面里有 Sparkle 更新资产和当前 DMG。</p>
           </div>
-          <div class="code-window">
-            <div class="code-title">
-              <span></span><span></span><span></span>
-              <strong>source build</strong>
-              <button type="button" data-copy-command data-i18n="install.copy">Copy</button>
-            </div>
-            <pre><code data-command>git clone https://github.com/tristan666666/agent-island.git
-cd agent-island
-./scripts/verify.sh
-open build/AgentIsland.app</code></pre>
+          <div class="install-actions">
+            <a class="primary-action dark" href="https://github.com/tristan666666/agent-island" rel="noreferrer">查看源码</a>
+            <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">阅读 README</a>
+            <a class="release-link" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Release 页面</a>
           </div>
         </div>
       </section>
 
       <section class="trust-section" id="trust">
         <div class="section-inner trust-layout">
-          <h2 data-i18n="trust.title">Local-first, with the sharp edges named.</h2>
+          <div>
+            <p class="section-label">信任边界</p>
+            <h2>本地优先，也把锋利边界说清楚。</h2>
+          </div>
           <ul>
-            <li data-i18n="trust.local">Runs as a Mac utility, not a hosted service.</li>
-            <li data-i18n="trust.state">Reads local transcript state to tell whether a session is working, done, or stalled.</li>
-            <li data-i18n="trust.resume">Auto-resume uses dangerous permission-bypass flags, so only trusted sessions should be attached.</li>
-            <li data-i18n="trust.logs">Trigger run logs stay under your local Application Support folder.</li>
+            <li>它是 Mac 本地工具，不是托管服务。</li>
+            <li>它读取本机会话记录状态，判断任务是在跑、跑完，还是卡住。</li>
+            <li>自动续跑会使用绕过权限确认的危险参数，只应该挂到你信任的会话上。</li>
+            <li>触发日志保存在本机 Application Support 目录下。</li>
           </ul>
         </div>
       </section>
@@ -205,7 +203,7 @@ open build/AgentIsland.app</code></pre>
 
     <footer class="site-footer">
       <span>Agent Island</span>
-      <span data-i18n="footer.note">Open-source macOS utility for Claude Code and Codex users.</span>
+      <span>给 Claude Code 和 Codex 用户用的开源 macOS 工具。</span>
       <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
     </footer>
 
