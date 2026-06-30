@@ -48,17 +48,17 @@ struct MenuBarStatusView: View {
     var body: some View {
         Text("Agent Island")
         Divider()
-        Text("Claude: \(monitor.claude.label)")
-        Text("Codex: \(monitor.codex.label)")
+        Text(L10n.tr("Claude: %@", monitor.claude.label))
+        Text(L10n.tr("Codex: %@", monitor.codex.label))
         Divider()
-        Button("Refresh usage") {
+        Button(L10n.tr("Refresh usage")) {
             usage.refresh()
         }
-        Button("Open Settings") {
+        Button(L10n.tr("Open Settings")) {
             SettingsWindowController.shared.show()
         }
         Divider()
-        Button("Quit Agent Island") {
+        Button(L10n.tr("Quit Agent Island")) {
             NSApp.terminate(nil)
         }
     }

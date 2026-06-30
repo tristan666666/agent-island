@@ -62,7 +62,7 @@ struct StatusGuideView: View {
     @ViewBuilder
     private func demoButton(_ label: String, _ state: ActivityMonitor.State?) -> some View {
         Button { ActivityMonitor.shared.demo(state) } label: {
-            Text(label)
+            Text(L10n.tr(label))
                 .font(Typography.label)
                 .foregroundStyle(.white.opacity(0.85))
                 .padding(.horizontal, 10).padding(.vertical, 5)

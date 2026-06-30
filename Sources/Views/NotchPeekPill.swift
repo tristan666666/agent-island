@@ -48,7 +48,7 @@ struct NotchPeekPill: View {
         }
         .monospacedDigit()
         .lineLimit(1)
-        .fixedSize()
+        .minimumScaleFactor(0.86)
     }
 
     private var warningGlyph: some View {

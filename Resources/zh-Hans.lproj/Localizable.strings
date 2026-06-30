@@ -83,6 +83,7 @@
 "Quit" = "退出";
 "Quit AgentIsland" = "退出 AgentIsland";
 "Re-authenticate" = "重新认证";
+"Claude" = "Claude";
 "Re-enable in Settings → Providers" = "在设置 → 服务中重新启用";
 "Refresh" = "刷新";
 "Refresh interval" = "刷新间隔";
@@ -148,7 +149,7 @@
 "resets in %d hours" = "%d 小时后重置";
 "resets in %d minutes" = "%d 分钟后重置";
 "Swipe to change pages." = "滑动切换页面。";
-"Tightens the gap between logos when the island is on a screen without a hardware notch." = "在没有硬件刘海的屏幕上收紧 logo 之间的间距。";
+"Tightens the gap between logos when the island is on a screen without a hardware notch." = "在没有硬件刘海的屏幕上收紧图标之间的间距。";
 
 /* Auto-Trigger (Triggers tab) */
 "Triggers" = "自动触发";
@@ -164,6 +165,8 @@
 "Add & enable" = "添加并启用";
 "Rescan" = "重新扫描";
 "Run" = "运行";
+"Run now" = "立即运行";
+"Open" = "打开";
 "Scanning…" = "扫描中…";
 "No sessions" = "无可用线程";
 "Delete trigger" = "删除触发器";
@@ -177,7 +180,6 @@
 "No active threads" = "无活跃线程";
 
 /* Auto-trigger island page (4th page) */
-"Auto" = "自动";
 "Auto-trigger" = "自动触发";
 "Manage" = "管理";
 "No triggers yet." = "还没有触发器。";
@@ -186,18 +188,65 @@
 /* Status guide (legend) */
 "Status guide" = "状态说明";
 "Working" = "正在跑";
-"The agent is producing output — its logo gently breathes." = "agent 正在产出、任务在跑 —— 对应 logo 缓慢呼吸。";
-"Your turn" = "该你了";
-"A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply." = "这一轮跑完了 —— logo 转圈（Claude 顺时针、Codex 逆时针），提醒你去回复。";
-"Stalled" = "卡住了";
-"A session froze mid-conversation — the logo turns red and beeps." = "对话中途卡住 / 中断了 —— logo 变红并哔哔提醒。";
+"The agent is producing output — its logo gently breathes." = "会话正在产出内容，对应图标会轻微呼吸。";
+"Your turn" = "该你回复";
+"A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply." = "这一轮已经结束，图标会转圈，提醒你回到会话继续输入。";
+"Stalled" = "无输出卡住";
+"A session froze mid-conversation — the logo turns red and beeps." = "会话中途长时间没有新输出，图标会变红并可发出提示音。";
 
 /* Stall sound toggle */
 "Stall sound" = "卡住提示音";
-"Beep when a session stalls. Turn off for a silent red alert." = "卡住时哔哔提醒。关掉则只剩红色、无声。";
+"Beep when a session stalls. Turn off for a silent red alert." = "仅在会话无输出卡住时发出提示音。关闭后只保留红色提醒。";
 
 /* Status guide tab */
 "Status" = "状态说明";
 "Logo states" = "图标状态";
 "Sound" = "声音";
-"What the island's two logos are telling you." = "刘海里这两个 logo 在告诉你什么。";
+"What the island's two logos are telling you." = "刘海里这两个图标在告诉你什么。";
+"Safety" = "安全";
+"Auto-resume kill switch" = "自动续跑总开关";
+"When off, Agent Island will never spawn Claude or Codex resume commands." = "关闭后，Agent Island 不会启动任何 Claude 或 Codex 续跑命令。";
+"Dry run" = "仅演练";
+"Write the command to the trigger log without running it." = "只把将要执行的命令写入触发日志，不真正运行。";
+"Trigger logs" = "触发日志";
+"Open the folder where every blocked, dry-run, or live trigger writes a log." = "打开日志文件夹，查看被拦截、演练或实际执行的触发记录。";
+"Logs" = "日志";
+"Trust" = "信任";
+"Trusted" = "已信任";
+"Untrust" = "取消信任";
+"trusted" = "已信任";
+"not trusted" = "未信任";
+"dry-run" = "仅演练";
+"Command unavailable" = "命令不可用";
+"Active sessions" = "活跃会话";
+"No active threads found." = "没有发现活跃线程。";
+"no project directory" = "无项目目录";
+"running" = "正在跑";
+"your turn" = "该你回复";
+"stalled" = "无输出卡住";
+"Auth required" = "需要登录";
+"auth required" = "需要登录";
+"Claude or Codex needs a fresh login before Agent Island can read usage." = "Claude 或 Codex 的登录凭据已失效，需要重新登录后才能读取用量。";
+"Rate limited" = "限流中";
+"rate limited" = "限流中";
+"The provider is refusing usage checks temporarily; wait for it to recover." = "服务暂时拒绝用量查询，等待限流恢复即可。";
+"Reminders" = "提醒";
+"Mac notifications" = "Mac 通知";
+"Notify when a background run needs you, stalls, needs login, or hits a rate limit." = "后台会话轮到你、无输出卡住、需要登录或限流时发送系统通知。";
+"Demo — force a state on the notch" = "演示 — 强制刘海状态";
+"Auth" = "登录";
+"Rate" = "限流";
+"%@ is waiting for you" = "%@ 正在等你回复";
+"%@ looks stalled" = "%@ 可能无输出卡住";
+"%@ needs login" = "%@ 需要重新登录";
+"%@ is rate limited" = "%@ 正在被限流";
+"A background coding session finished a turn. It is your turn." = "后台编码会话已经完成这一轮，现在该你回复。";
+"No output has appeared for a while. Check the session before auto-resuming." = "一段时间没有新输出。自动续跑前建议先检查会话。";
+"Open Settings and run Claude re-authentication." = "打开设置，点击 Claude 的重新认证。";
+"Run codex login in Terminal, then refresh Agent Island." = "在终端运行 codex login，然后刷新 Agent Island。";
+"Wait for the limit to recover before continuing." = "等待限流恢复后再继续。";
+"Claude: %@" = "Claude：%@";
+"Codex: %@" = "Codex：%@";
+"Refresh usage" = "刷新用量";
+"Open Settings" = "打开设置";
+"Quit Agent Island" = "退出 Agent Island";

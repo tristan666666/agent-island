@@ -95,6 +95,7 @@ struct IslandRootView: View {
                     if model.state != .compact {
                         PeekPillOverlay(
                             provider: .claude,
+                            slotWidth: model.pillSlotWidth,
                             topPadding: max(0, (model.notch.height - 14) / 2),
                             pillsVisible: pillsVisible
                         )
@@ -104,6 +105,7 @@ struct IslandRootView: View {
                     if model.state != .compact {
                         PeekPillOverlay(
                             provider: .codex,
+                            slotWidth: model.pillSlotWidth,
                             topPadding: max(0, (model.notch.height - 14) / 2),
                             pillsVisible: pillsVisible
                         )
@@ -578,6 +580,7 @@ private struct LogoOverlay: View {
 /// in it.
 private struct PeekPillOverlay: View {
     let provider: AlertEngine.Provider
+    let slotWidth: CGFloat
     let topPadding: CGFloat
     let pillsVisible: Bool
 
@@ -594,6 +597,7 @@ private struct PeekPillOverlay: View {
             alignment: provider == .claude ? .leading : .trailing,
             severity: severity
         )
+        .frame(width: pillContentWidth, alignment: provider == .claude ? .leading : .trailing)
         .padding(provider == .claude ? .leading : .trailing, 14)
         .padding(.top, topPadding)
         // Two opacity bindings stack:
@@ -616,6 +620,10 @@ private struct PeekPillOverlay: View {
 
     private var isVisible: Bool {
         visibility.effectiveVisible(provider: provider)
+    }
+
+    private var pillContentWidth: CGFloat {
+        max(0, slotWidth - 14)
     }
 
     private var currentWindow: WindowUsage {

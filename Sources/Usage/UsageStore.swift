@@ -44,14 +44,20 @@ final class UsageStore: ObservableObject {
         // CODEXISLAND_DEMO=1 is set in the launching env.
         if AppEnvironment.isDemo {
             let now = Date()
+            let claudeFiveHour = Self.demoDouble("AGENTISLAND_DEMO_CLAUDE_5H", fallback: 0.73)
+            let claudeWeekly = Self.demoDouble("AGENTISLAND_DEMO_CLAUDE_WEEKLY", fallback: 0.81)
+            let codexFiveHour = Self.demoDouble("AGENTISLAND_DEMO_CODEX_5H", fallback: 0.67)
+            let codexWeekly = Self.demoDouble("AGENTISLAND_DEMO_CODEX_WEEKLY", fallback: 0.76)
+            let claudeReset = Self.demoMinutes("AGENTISLAND_DEMO_CLAUDE_RESET_MINUTES", fallback: 107)
+            let codexReset = Self.demoMinutes("AGENTISLAND_DEMO_CODEX_RESET_MINUTES", fallback: 143)
             self.claude = AppUsage(
                 fiveHour: WindowUsage(
-                    usedPercent: 0.73,
-                    resetAt: now.addingTimeInterval(1 * 3600 + 47 * 60),
+                    usedPercent: claudeFiveHour,
+                    resetAt: now.addingTimeInterval(TimeInterval(claudeReset * 60)),
                     error: nil
                 ),
                 weekly: WindowUsage(
-                    usedPercent: 0.81,
+                    usedPercent: claudeWeekly,
                     resetAt: now.addingTimeInterval(4 * 86400 + 11 * 3600),
                     error: nil
                 ),
@@ -59,12 +65,12 @@ final class UsageStore: ObservableObject {
             )
             self.codex = AppUsage(
                 fiveHour: WindowUsage(
-                    usedPercent: 0.67,
-                    resetAt: now.addingTimeInterval(2 * 3600 + 23 * 60),
+                    usedPercent: codexFiveHour,
+                    resetAt: now.addingTimeInterval(TimeInterval(codexReset * 60)),
                     error: nil
                 ),
                 weekly: WindowUsage(
-                    usedPercent: 0.76,
+                    usedPercent: codexWeekly,
                     resetAt: now.addingTimeInterval(4 * 86400 + 18 * 3600),
                     error: nil
                 ),
@@ -111,6 +117,18 @@ final class UsageStore: ObservableObject {
             self.lastUpdated = Date()
             self.loading = false
         }
+    }
+
+    private static func demoDouble(_ key: String, fallback: Double) -> Double {
+        guard let raw = ProcessInfo.processInfo.environment[key],
+              let value = Double(raw) else { return fallback }
+        return min(1, max(0, value))
+    }
+
+    private static func demoMinutes(_ key: String, fallback: Int) -> Int {
+        guard let raw = ProcessInfo.processInfo.environment[key],
+              let value = Int(raw) else { return fallback }
+        return max(1, value)
     }
 
     /// True when both windows have errors and zero values — nothing useful
