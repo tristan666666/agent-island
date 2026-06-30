@@ -6,7 +6,7 @@
     <title>Agent Island - 开源 macOS AI 守夜人</title>
     <meta name="description" content="Agent Island 是一个开源 macOS 工具，用来盯住 Claude Code 和 Codex 会话，并在该你接手时把你叫回来。" />
     <meta property="og:title" content="Agent Island - 开源 macOS AI 守夜人" />
-    <meta property="og:description" content="GitHub 优先的 macOS 工具：刘海状态、源码构建路径、版本证明和本地优先边界。" />
+    <meta property="og:description" content="GitHub 优先的 macOS 工具：刘海状态、源码构建路径、版本标签证明和本地优先边界。" />
     <meta property="og:image" content="../assets/social-preview.png" />
     <meta property="og:type" content="website" />
     <link rel="icon" href="../assets/agentisland_logo.png" />
@@ -37,14 +37,14 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-shell">
           <div class="hero-copy">
-            <p class="eyebrow">开源 macOS 工具 / MIT / v1.1.0</p>
+            <p class="eyebrow">开源 macOS 工具 / MIT / v1.2.0</p>
             <h1 id="hero-title">Agent Island</h1>
             <p class="hero-kicker">给 Claude Code 和 Codex 长任务用的 AI 守夜人。</p>
             <p class="hero-subtitle">它在后台盯住长时间运行的 agent 会话。当任务完成、卡住、触达额度，或者正在等你输入时，它会把接手机会变得可见。</p>
             <div class="hero-actions" aria-label="主要操作">
               <a class="primary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer">在 GitHub 上查看</a>
               <a class="secondary-action" href="#get-started">开始使用</a>
-              <a class="text-action" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">最新版本 v1.1.0</a>
+              <a class="text-action" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签 v1.2.0</a>
             </div>
             <div class="hero-command" aria-label="源码构建命令">
               <div>
@@ -123,7 +123,7 @@ cd agent-island
             <p>官网优先展示仓库、版本、许可和源码构建路径，因为 Agent Island 更像一个有用的开源 Mac 工具，而不是一个隐藏在品牌话术背后的 SaaS 页面。</p>
             <div class="proof-links">
               <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">仓库</a>
-              <a href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">版本 v1.1.0</a>
+              <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签 v1.2.0</a>
               <a href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">中文 README</a>
             </div>
           </div>
@@ -174,13 +174,13 @@ cd agent-island
         <div class="section-inner install-layout">
           <div>
             <p class="section-label">开始使用</p>
-            <h2>先从源码开始。需要最快路径时再看 Release。</h2>
-            <p>克隆仓库可以看到完整构建路径；最新 release 页面里有 Sparkle 更新资产和当前 DMG。</p>
+            <h2>先从源码开始。需要可复现路径时锁定版本。</h2>
+            <p>克隆仓库可以看到完整构建路径；v1.2.0 tag 对应的是这个官网展示的公开版本快照。</p>
           </div>
           <div class="install-actions">
             <a class="primary-action dark" href="https://github.com/tristan666666/agent-island" rel="noreferrer">查看源码</a>
             <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.zh-CN.md#快速开始" rel="noreferrer">阅读 README</a>
-            <a class="release-link" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Release 页面</a>
+            <a class="version-link" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签</a>
           </div>
         </div>
       </section>
@@ -199,12 +199,78 @@ cd agent-island
           </ul>
         </div>
       </section>
+
+      <section class="faq-section" id="faq">
+        <div class="section-inner">
+          <div class="section-lead wide">
+            <p class="section-label">FAQ</p>
+            <h2>安装前先看清楚。</h2>
+            <p>这里是项目文档的短版：它是什么、在哪里运行、v1.2.0 更新了什么，以及哪些地方需要信任边界。</p>
+          </div>
+          <div class="faq-list">
+            <article>
+              <h3>Agent Island 是什么？</h3>
+              <p>它是给 Claude Code 和 Codex 用户使用的开源 macOS 工具，用来观察本地长任务，并把完成、卡住、触达额度或等待输入这些状态变得可见。</p>
+            </article>
+            <article>
+              <h3>它会跑在云端吗？</h3>
+              <p>不会。它是本机 Mac 应用。会话状态和触发运行日志都留在你的电脑上，除非你主动分享。</p>
+            </article>
+            <article>
+              <h3>v1.2.0 更新了什么？</h3>
+              <p>v1.2.0 版本重点是实时会话状态、前台 Turn alarm、自动续跑控制，以及用于解释注意力状态的 Status guide。</p>
+            </article>
+            <article>
+              <h3>它怎么判断会话状态？</h3>
+              <p>Agent Island 会保守地读取本地 transcript 和用量信号，再映射成 working、your-turn、stalled、rate-limited 或 auth-required 等状态。</p>
+            </article>
+            <article>
+              <h3>哪里需要额外信任？</h3>
+              <p>自动续跑会使用绕过权限确认的参数。只给你已经信任、可重复的本地工作流挂触发器。</p>
+            </article>
+            <article>
+              <h3>更新和安全怎么处理？</h3>
+              <p>版本标签、Sparkle 更新说明、许可证和安全策略都公开在 GitHub，可以直接检查。</p>
+            </article>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer">
-      <span>Agent Island</span>
-      <span>给 Claude Code 和 Codex 用户用的开源 macOS 工具。</span>
-      <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
+      <div class="footer-grid">
+        <section>
+          <h3>学习</h3>
+          <a href="#faq">常见问题</a>
+          <a href="#how">接手过程</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md" rel="noreferrer">会话检测</a>
+        </section>
+        <section>
+          <h3>项目</h3>
+          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub 仓库</a>
+          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">版本标签 v1.2.0</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">许可证</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md" rel="noreferrer">贡献指南</a>
+        </section>
+        <section>
+          <h3>信任</h3>
+          <a href="#trust">本地边界</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/SECURITY.md" rel="noreferrer">安全策略</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md" rel="noreferrer">Sparkle 更新</a>
+        </section>
+        <section>
+          <h3>社区</h3>
+          <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
+          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
+          <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
+        </section>
+        <section>
+          <h3>元信息</h3>
+          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">当前标签 v1.2.0</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">MIT</a>
+          <span>© 2026 Agent Island</span>
+        </section>
+      </div>
     </footer>
 
     <script src="../script.js"></script>

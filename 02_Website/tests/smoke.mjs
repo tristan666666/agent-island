@@ -67,8 +67,31 @@ function sliceHero(html) {
   return html.slice(start, end);
 }
 
+function sliceSection(html, selectorStart, selectorEnd) {
+  const start = html.indexOf(selectorStart);
+  const end = html.indexOf(selectorEnd, start);
+  if (start < 0 || end < 0) throw new Error(`${selectorStart} section not found`);
+  return html.slice(start, end);
+}
+
 function anchorTexts(html) {
   return [...html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)].map((match) => match[1].replace(/<[^>]+>/g, "").trim());
+}
+
+function footerHeadings(html) {
+  const footer = sliceSection(html, '<footer class="site-footer">', "</footer>");
+  return [...footer.matchAll(/<h3>(.*?)<\/h3>/g)].map((match) => match[1].trim());
+}
+
+function footerHrefs(html) {
+  const footer = sliceSection(html, '<footer class="site-footer">', "</footer>");
+  return [...footer.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((match) => match[1]);
+}
+
+function assertSameList(actual, expected, label) {
+  const sameLength = actual.length === expected.length;
+  const sameValues = actual.every((value, index) => value === expected[index]);
+  if (!sameLength || !sameValues) throw new Error(`${label}: expected ${expected.join(", ")}, got ${actual.join(", ")}`);
 }
 
 try {
@@ -102,7 +125,13 @@ try {
   const englishHero = sliceHero(english);
   const chineseHero = sliceHero(chinese);
 
-  if (englishHero.includes("AgentIsland-1.1.0.dmg") || chineseHero.includes("AgentIsland-1.1.0.dmg")) {
+  if (english.includes("v1.1.0") || english.includes("1.1.0") || chinese.includes("v1.1.0") || chinese.includes("1.1.0")) {
+    throw new Error("Website must not contain v1.1.0 or 1.1.0 version references");
+  }
+  if (!english.includes("v1.2.0") || !chinese.includes("v1.2.0")) {
+    throw new Error("Website must expose v1.2.0 version references");
+  }
+  if (englishHero.includes("AgentIsland-1.2.0.dmg") || chineseHero.includes("AgentIsland-1.2.0.dmg")) {
     throw new Error("Hero must not link directly to the DMG");
   }
 
@@ -121,6 +150,44 @@ try {
   }
   if (chinese.includes("Your AI night-watch. Calls you back.")) {
     throw new Error("Chinese route must not ship English fallback hero copy");
+  }
+
+  if (english.indexOf('id="faq"') >= english.indexOf("</main>") || english.indexOf('id="faq"') <= english.indexOf('id="trust"')) {
+    throw new Error("English FAQ must appear after Trust and before the footer");
+  }
+  if (chinese.indexOf('id="faq"') >= chinese.indexOf("</main>") || chinese.indexOf('id="faq"') <= chinese.indexOf('id="trust"')) {
+    throw new Error("Chinese FAQ must appear after Trust and before the footer");
+  }
+
+  assertSameList(footerHeadings(english), ["Learn", "Project", "Trust", "Community", "Meta"], "English footer headings");
+  assertSameList(footerHeadings(chinese), ["学习", "项目", "信任", "社区", "元信息"], "Chinese footer headings");
+  if (footerHeadings(english).includes("Product") || footerHeadings(english).includes("Get Started")) {
+    throw new Error("English footer must not include Product or Get Started columns");
+  }
+
+  const requiredFooterHrefs = [
+    "#faq",
+    "#how",
+    "#trust",
+    "https://github.com/tristan666666/agent-island",
+    "https://github.com/tristan666666/agent-island/tree/v1.2.0",
+    "https://github.com/tristan666666/agent-island/blob/main/LICENSE",
+    "https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md",
+    "https://github.com/tristan666666/agent-island/blob/main/SECURITY.md",
+    "https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md",
+    "https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md",
+    "https://github.com/tristan666666/agent-island/issues",
+    "https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools",
+    "https://github.com/jaywcjlove/awesome-swift-macos-apps",
+  ];
+  for (const html of [english, chinese]) {
+    const hrefs = footerHrefs(html);
+    for (const href of requiredFooterHrefs) {
+      if (!hrefs.includes(href)) throw new Error(`Footer missing link: ${href}`);
+    }
+    if (hrefs.some((href) => href.includes("/releases/latest"))) throw new Error("Footer must not use stale releases/latest redirect");
+    if (hrefs.some((href) => href.includes("/releases/tag/"))) throw new Error("Footer must not present a Git tag page as a GitHub Release");
+    if (hrefs.some((href) => href.includes("producthunt.com"))) throw new Error("Footer must not link to Product Hunt");
   }
 
   const protectedPaths = [

@@ -6,7 +6,7 @@
     <title>Agent Island - Open-source AI night-watch for macOS</title>
     <meta name="description" content="Agent Island is an open-source macOS utility that watches Claude Code and Codex sessions, then calls you back when it is your turn." />
     <meta property="og:title" content="Agent Island - Open-source AI night-watch for macOS" />
-    <meta property="og:description" content="GitHub-first macOS utility for Claude Code and Codex runs: live notch state, source build path, release proof, and local-first guardrails." />
+    <meta property="og:description" content="GitHub-first macOS utility for Claude Code and Codex runs: live notch state, source build path, version proof, and local-first guardrails." />
     <meta property="og:image" content="./assets/social-preview.png" />
     <meta property="og:type" content="website" />
     <link rel="icon" href="./assets/agentisland_logo.png" />
@@ -37,14 +37,14 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-shell">
           <div class="hero-copy">
-            <p class="eyebrow">Open-source macOS utility / MIT / v1.1.0</p>
+            <p class="eyebrow">Open-source macOS utility / MIT / v1.2.0</p>
             <h1 id="hero-title">Agent Island</h1>
             <p class="hero-kicker">Your AI night-watch for Claude Code and Codex runs.</p>
             <p class="hero-subtitle">It watches long-running agent sessions in the background, then makes the handoff visible when a run is done, stalled, rate-limited, or waiting for you.</p>
             <div class="hero-actions" aria-label="Primary actions">
               <a class="primary-action" href="https://github.com/tristan666666/agent-island" rel="noreferrer">View on GitHub</a>
               <a class="secondary-action" href="#get-started">Get Started</a>
-              <a class="text-action" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Latest release v1.1.0</a>
+              <a class="text-action" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag v1.2.0</a>
             </div>
             <div class="hero-command" aria-label="Source build command">
               <div>
@@ -123,7 +123,7 @@ cd agent-island
             <p>The homepage leads with the repo, version, license, and source build path because Agent Island is closer to a useful open-source Mac tool than a hosted SaaS brand page.</p>
             <div class="proof-links">
               <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">Repository</a>
-              <a href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Release v1.1.0</a>
+              <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag v1.2.0</a>
               <a href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">README</a>
             </div>
           </div>
@@ -174,13 +174,13 @@ cd agent-island
         <div class="section-inner install-layout">
           <div>
             <p class="section-label">Get Started</p>
-            <h2>Start from source. Use the release when you need speed.</h2>
-            <p>Clone the repository for the full build path, or open the latest release page for the signed Sparkle update assets and current DMG.</p>
+            <h2>Start from source. Pin the version when you need repeatability.</h2>
+            <p>Clone the repository for the full build path, or open the v1.2.0 tag for the exact public snapshot shown on this site.</p>
           </div>
           <div class="install-actions">
             <a class="primary-action dark" href="https://github.com/tristan666666/agent-island" rel="noreferrer">View source</a>
             <a class="secondary-action dark" href="https://github.com/tristan666666/agent-island/blob/main/README.md#quick-start" rel="noreferrer">Read README</a>
-            <a class="release-link" href="https://github.com/tristan666666/agent-island/releases/tag/v1.1.0" rel="noreferrer">Release page</a>
+            <a class="version-link" href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag</a>
           </div>
         </div>
       </section>
@@ -199,12 +199,78 @@ cd agent-island
           </ul>
         </div>
       </section>
+
+      <section class="faq-section" id="faq">
+        <div class="section-inner">
+          <div class="section-lead wide">
+            <p class="section-label">FAQ</p>
+            <h2>Answers before you install.</h2>
+            <p>The short version of the project docs: what it is, where it runs, what changed in v1.2.0, and what needs trust.</p>
+          </div>
+          <div class="faq-list">
+            <article>
+              <h3>What is Agent Island?</h3>
+              <p>An open-source macOS utility for Claude Code and Codex users. It watches long-running local agent sessions and makes finished, stalled, rate-limited, or waiting states visible.</p>
+            </article>
+            <article>
+              <h3>Does it run in the cloud?</h3>
+              <p>No. It is a local Mac app. Session state and trigger run logs stay on your machine unless you decide to share them.</p>
+            </article>
+            <article>
+              <h3>What changed in v1.2.0?</h3>
+              <p>The v1.2.0 version centers on live session states, a foreground turn alarm, auto-resume controls, and a status guide for the attention states.</p>
+            </article>
+            <article>
+              <h3>How does detection work?</h3>
+              <p>Agent Island reads local transcript and usage signals conservatively, then maps them into working, your-turn, stalled, rate-limited, or auth-required states.</p>
+            </article>
+            <article>
+              <h3>What needs extra trust?</h3>
+              <p>Auto-resume uses permission-bypass flags. Attach triggers only to repeatable local workflows you already trust.</p>
+            </article>
+            <article>
+              <h3>How are updates and security handled?</h3>
+              <p>The version tag, Sparkle update notes, license, and security policy are all published in GitHub so they can be inspected directly.</p>
+            </article>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer">
-      <span>Agent Island</span>
-      <span>Open-source macOS utility for Claude Code and Codex users.</span>
-      <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub</a>
+      <div class="footer-grid">
+        <section>
+          <h3>Learn</h3>
+          <a href="#faq">FAQ</a>
+          <a href="#how">Handoff</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/how-agent-island-detects-session-state.md" rel="noreferrer">Session detection</a>
+        </section>
+        <section>
+          <h3>Project</h3>
+          <a href="https://github.com/tristan666666/agent-island" rel="noreferrer">GitHub repo</a>
+          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Version tag v1.2.0</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">License</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/CONTRIBUTING.md" rel="noreferrer">Contributing</a>
+        </section>
+        <section>
+          <h3>Trust</h3>
+          <a href="#trust">Local boundary</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/SECURITY.md" rel="noreferrer">Security policy</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/docs/SPARKLE.md" rel="noreferrer">Sparkle updates</a>
+        </section>
+        <section>
+          <h3>Community</h3>
+          <a href="https://github.com/tristan666666/agent-island/issues" rel="noreferrer">Issues</a>
+          <a href="https://github.com/jaywcjlove/awesome-mac/blob/master/README.md#menu-bar-tools" rel="noreferrer">awesome-mac</a>
+          <a href="https://github.com/jaywcjlove/awesome-swift-macos-apps" rel="noreferrer">awesome-swift-macos-apps</a>
+        </section>
+        <section>
+          <h3>Meta</h3>
+          <a href="https://github.com/tristan666666/agent-island/tree/v1.2.0" rel="noreferrer">Current tag v1.2.0</a>
+          <a href="https://github.com/tristan666666/agent-island/blob/main/LICENSE" rel="noreferrer">MIT</a>
+          <span>© 2026 Agent Island</span>
+        </section>
+      </div>
     </footer>
 
     <script src="./script.js"></script>
