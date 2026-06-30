@@ -521,9 +521,19 @@ struct SettingsView: View {
                 dot: IslandColor.codex,
                 chip: usage.codex.plan?.uppercased()
             ) {
-                SettingsToggle(isOn: visibility.codexVisible) {
-                    withAnimation(.openMorph) {
-                        visibility.codexVisible.toggle()
+                HStack(spacing: 8) {
+                    if CodexCredentials.canPromptReauth() {
+                        PillButton(
+                            label: usage.codexReauthInProgress ? "waiting for login…" : "Re-authenticate",
+                            isLoading: usage.codexReauthInProgress
+                        ) {
+                            usage.reauthenticateCodex()
+                        }
+                    }
+                    SettingsToggle(isOn: visibility.codexVisible) {
+                        withAnimation(.openMorph) {
+                            visibility.codexVisible.toggle()
+                        }
                     }
                 }
             }

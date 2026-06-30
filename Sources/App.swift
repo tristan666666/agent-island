@@ -10,6 +10,12 @@ struct AgentIslandApp: App {
         // no menu bar), so this stays inert. Settings is shown via our own
         // SettingsWindowController.
         Settings { EmptyView() }
+        MenuBarExtra {
+            MenuBarStatusView()
+        } label: {
+            MenuBarStatusLabel()
+        }
+        .menuBarExtraStyle(.menu)
     }
 }
 
@@ -53,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Activity monitor drives the provider-logo states (working / your-turn
         // / stalled) by watching transcript progress.
+        AgentReminderCenter.shared.start()
         ActivityMonitor.shared.start()
 
         // Touch the shared updater so Sparkle starts its background scheduler.

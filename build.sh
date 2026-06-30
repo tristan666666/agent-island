@@ -64,6 +64,7 @@ for arch_pair in "arm64:$ARM64_BIN" "x86_64:$X86_64_BIN"; do
     -F "$SPARKLE_DIR" \
     -framework SwiftUI \
     -framework AppKit \
+    -framework UserNotifications \
     -framework ServiceManagement \
     -framework Sparkle \
     -Xlinker -rpath -Xlinker "@executable_path/../Frameworks" \

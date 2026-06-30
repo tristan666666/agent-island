@@ -14,7 +14,32 @@ final class ActivityMonitor: ObservableObject {
     static let shared = ActivityMonitor()
     private init() {}
 
-    enum State: Int { case idle, working, needsYou, stalled }
+    enum State: Int {
+        case idle = 0
+        case working = 1
+        case needsYou = 2
+        case stalled = 3
+        case rateLimited = 4
+        case authRequired = 5
+
+        var isAttentionState: Bool {
+            switch self {
+            case .needsYou, .stalled, .rateLimited, .authRequired: return true
+            case .idle, .working: return false
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .idle: return L10n.tr("idle")
+            case .working: return L10n.tr("running")
+            case .needsYou: return L10n.tr("your turn")
+            case .stalled: return L10n.tr("stalled")
+            case .rateLimited: return L10n.tr("rate limited")
+            case .authRequired: return L10n.tr("auth required")
+            }
+        }
+    }
 
     @Published private(set) var claude: State = .idle
     @Published private(set) var codex: State = .idle
@@ -54,13 +79,40 @@ final class ActivityMonitor: ObservableObject {
         Task.detached(priority: .utility) {
             let result = Scan.run(lastWorking: snapshot, now: now)
             await MainActor.run {
+                let oldClaude = self.claude
+                let oldCodex = self.codex
+                let claude = self.overlayUsageAttention(result.claude, usage: UsageStore.shared.claude)
+                let codex = self.overlayUsageAttention(result.codex, usage: UsageStore.shared.codex)
                 self.lastWorking = result.lastWorking
-                if result.claude == .stalled && self.claude != .stalled { self.beep() }
-                self.claude = result.claude
-                if result.codex == .stalled && self.codex != .stalled { self.beep() }
-                self.codex = result.codex
+                if claude == .stalled && oldClaude != .stalled { self.beep() }
+                self.claude = claude
+                AgentReminderCenter.shared.handle(provider: .claude, old: oldClaude, new: claude)
+                if codex == .stalled && oldCodex != .stalled { self.beep() }
+                self.codex = codex
+                AgentReminderCenter.shared.handle(provider: .codex, old: oldCodex, new: codex)
             }
         }
+    }
+
+    private func overlayUsageAttention(_ state: State, usage: AppUsage) -> State {
+        guard let attention = Self.usageAttentionState(usage) else { return state }
+        return attention.rawValue > state.rawValue ? attention : state
+    }
+
+    private static func usageAttentionState(_ usage: AppUsage) -> State? {
+        let messages = [usage.fiveHour.error, usage.weekly.error].compactMap { $0?.lowercased() }
+        if messages.contains(where: { $0.contains("rate limited") || $0.contains("rate_limit") }) {
+            return .rateLimited
+        }
+        if messages.contains(where: { message in
+            ClaudeCredentials.isAuthRecoverableError(message)
+                || message.contains("auth")
+                || message.contains("login")
+                || message.contains("no codex")
+        }) {
+            return .authRequired
+        }
+        return nil
     }
 
     private func beep() {

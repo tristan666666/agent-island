@@ -18,9 +18,11 @@ final class UsageStore: ObservableObject {
     /// processes; the click ends up no-ops anyway because the spawn check
     /// gates on this.
     @Published var claudeReauthInProgress = false
+    @Published var codexReauthInProgress = false
 
     private var refreshTask: Task<Void, Never>?
     private var reauthPollTask: Task<Void, Never>?
+    private var codexReauthPollTask: Task<Void, Never>?
     private var pollTimer: Timer?
     private var intervalCancellable: AnyCancellable?
     private var netMonitor: NWPathMonitor?
@@ -214,6 +216,39 @@ final class UsageStore: ObservableObject {
                 return
             }
             await self?.finishClaudeReauthWithSingleFetch()
+        }
+    }
+
+    func reauthenticateCodex() {
+        guard !codexReauthInProgress else { return }
+        let initialStamp = CodexCredentials.authModificationStamp()
+        guard CodexCredentials.spawnReauth() else { return }
+        codexReauthInProgress = true
+        codexReauthPollTask?.cancel()
+        codexReauthPollTask = Task { [weak self, initialStamp] in
+            for _ in 0..<40 {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                if Task.isCancelled { return }
+                let currentStamp = CodexCredentials.authModificationStamp()
+                guard currentStamp != nil, currentStamp != initialStamp else {
+                    continue
+                }
+                await self?.finishCodexReauthWithSingleFetch()
+                return
+            }
+            await self?.finishCodexReauthWithSingleFetch()
+        }
+    }
+
+    private func finishCodexReauthWithSingleFetch() async {
+        let c = await UsageFetcher.fetchCodex()
+        await MainActor.run {
+            self.codex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
+            self.refreshWarning = UsageStore.isErrorOnly(c) ? L10n.tr("Codex stale") : nil
+            if !UsageStore.isErrorOnly(c) {
+                self.lastUpdated = Date()
+            }
+            self.codexReauthInProgress = false
         }
     }
 

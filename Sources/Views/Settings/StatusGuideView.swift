@@ -5,6 +5,7 @@ import SwiftUI
 /// switch to silence the stall beep.
 struct StatusGuideView: View {
     @ObservedObject private var sound = StallSoundStore.shared
+    @ObservedObject private var reminders = AgentReminderStore.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -19,8 +20,18 @@ struct StatusGuideView: View {
             legendRow(.working, "Working", "The agent is producing output — its logo gently breathes.")
             legendRow(.needsYou, "Your turn", "A turn finished — the logo spins (Claude ↻, Codex ↺) so you know to reply.")
             legendRow(.stalled, "Stalled", "A session froze mid-conversation — the logo turns red and beeps.")
+            legendRow(.authRequired, "Auth required", "Claude or Codex needs a fresh login before Agent Island can read usage.")
+            legendRow(.rateLimited, "Rate limited", "The provider is refusing usage checks temporarily; wait for it to recover.")
 
-            sectionLabel("Sound").padding(.top, 14)
+            sectionLabel("Reminders").padding(.top, 14)
+            SettingsRow(
+                title: "Mac notifications",
+                subtitle: "Notify when a background run needs you, stalls, needs login, or hits a rate limit."
+            ) {
+                SettingsToggle(isOn: reminders.enabled) { reminders.enabled.toggle() }
+            }
+
+            sectionLabel("Sound").padding(.top, 10)
             SettingsRow(
                 title: "Stall sound",
                 subtitle: "Beep when a session stalls. Turn off for a silent red alert."
@@ -36,6 +47,8 @@ struct StatusGuideView: View {
                     demoButton("Working", .working)
                     demoButton("Your turn", .needsYou)
                     demoButton("Stalled", .stalled)
+                    demoButton("Auth", .authRequired)
+                    demoButton("Rate", .rateLimited)
                     demoButton("Live", nil)
                 }
                 .padding(.horizontal, 10)

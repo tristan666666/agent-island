@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import AppKit
 
 /// Fires auto-triggers. Subscribes to `UsageStore` and treats a changed
 /// `fiveHour.resetAt` for a provider as that provider's window having reset —
@@ -20,6 +21,24 @@ final class TriggerEngine: ObservableObject {
     private var subs: Set<AnyCancellable> = []
     private var lastReset: [TriggerTool: Date]
     private var intervalTimer: Timer?
+    private static let logDir = NSHomeDirectory() + "/Library/Application Support/AgentIsland/trigger-runs"
+
+    struct ResumeCommand {
+        let binary: String
+        let arguments: [String]
+        let cwd: String
+
+        var display: String {
+            ([Self.shellQuoted(binary)] + arguments.map(Self.shellQuoted)).joined(separator: " ")
+        }
+
+        private static func shellQuoted(_ raw: String) -> String {
+            if raw.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.union(.init(charactersIn: "'\"$`\\!"))) == nil {
+                return raw
+            }
+            return "'\(raw.replacingOccurrences(of: "'", with: "'\\''"))'"
+        }
+    }
 
     /// Per-tool "last reset boundary we've already fired on", persisted so the
     /// detection survives relaunches. Stored as rawValue → unix-seconds.
@@ -124,26 +143,30 @@ final class TriggerEngine: ObservableObject {
             NSLog("AgentIsland trigger: suppressed fire in non-normal mode (%@)", trigger.label)
             return
         }
-        guard let binary = CLILocator.path(for: trigger.tool) else {
+        let safety = TriggerSafetyStore.shared
+        guard safety.executionEnabled else {
+            logStatus("blocked: trigger execution is off", for: trigger)
+            return
+        }
+        guard safety.isAllowed(cwd: trigger.cwd) else {
+            logStatus("blocked: project is not trusted for auto-resume\n\(preview(for: trigger))", for: trigger)
+            return
+        }
+        guard let command = command(for: trigger, requireResolvedBinary: true) else {
             NSLog("AgentIsland trigger: %@ binary not found", trigger.tool.rawValue)
             return
         }
-
-        let arguments: [String]
-        switch trigger.tool {
-        case .claude:
-            arguments = ["--resume", trigger.sessionId, "-p", trigger.message,
-                         "--dangerously-skip-permissions"]
-        case .codex:
-            arguments = ["exec", "resume", trigger.sessionId, trigger.message,
-                         "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check"]
+        if safety.dryRun {
+            logStatus("dry-run: would execute\n\(command.display)", for: trigger)
+            TriggerStore.shared.markFired(trigger.id)
+            return
         }
 
         let task = Process()
-        task.launchPath = binary
-        task.arguments = arguments
-        if !trigger.cwd.isEmpty, FileManager.default.fileExists(atPath: trigger.cwd) {
-            task.currentDirectoryPath = trigger.cwd
+        task.launchPath = command.binary
+        task.arguments = command.arguments
+        if !command.cwd.isEmpty, FileManager.default.fileExists(atPath: command.cwd) {
+            task.currentDirectoryPath = command.cwd
         }
         var env = ProcessInfo.processInfo.environment
         let home = NSHomeDirectory()
@@ -169,10 +192,51 @@ final class TriggerEngine: ObservableObject {
     }
 
     private func openLog(for trigger: Trigger) -> FileHandle? {
-        let dir = NSHomeDirectory() + "/Library/Application Support/AgentIsland/trigger-runs"
-        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        let path = dir + "/\(trigger.id)_\(Int(Date().timeIntervalSince1970)).log"
+        try? FileManager.default.createDirectory(atPath: Self.logDir, withIntermediateDirectories: true)
+        let path = Self.logDir + "/\(trigger.id)_\(Int(Date().timeIntervalSince1970)).log"
         guard FileManager.default.createFile(atPath: path, contents: nil) else { return nil }
         return FileHandle(forWritingAtPath: path)
+    }
+
+    func preview(for trigger: Trigger) -> String {
+        command(for: trigger, requireResolvedBinary: false)?.display ?? L10n.tr("Command unavailable")
+    }
+
+    func openProject(for trigger: Trigger) {
+        guard !trigger.cwd.isEmpty, FileManager.default.fileExists(atPath: trigger.cwd) else { return }
+        NSWorkspace.shared.open(URL(fileURLWithPath: trigger.cwd, isDirectory: true))
+    }
+
+    func openLogsDirectory() {
+        try? FileManager.default.createDirectory(atPath: Self.logDir, withIntermediateDirectories: true)
+        NSWorkspace.shared.open(URL(fileURLWithPath: Self.logDir, isDirectory: true))
+    }
+
+    private func command(for trigger: Trigger, requireResolvedBinary: Bool) -> ResumeCommand? {
+        let binary = CLILocator.path(for: trigger.tool)
+        if requireResolvedBinary, binary == nil { return nil }
+        let displayBinary = binary ?? trigger.tool.rawValue
+        let arguments: [String]
+        switch trigger.tool {
+        case .claude:
+            arguments = ["--resume", trigger.sessionId, "-p", trigger.message,
+                         "--dangerously-skip-permissions"]
+        case .codex:
+            arguments = ["exec", "resume", trigger.sessionId, trigger.message,
+                         "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check"]
+        }
+        return ResumeCommand(binary: displayBinary, arguments: arguments, cwd: trigger.cwd)
+    }
+
+    private func logStatus(_ message: String, for trigger: Trigger) {
+        guard let handle = openLog(for: trigger) else {
+            NSLog("AgentIsland trigger: %@", message)
+            return
+        }
+        if let data = (message + "\n").data(using: .utf8) {
+            handle.write(data)
+        }
+        try? handle.close()
+        NSLog("AgentIsland trigger: %@", message)
     }
 }

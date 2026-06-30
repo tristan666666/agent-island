@@ -397,15 +397,15 @@ private struct GlowLayer: View {
                 // pulses, visible even at .compact so the user notices
                 // without having to hover.
                 .shadow(
-                    color: glowColor.opacity(stallActive
+                    color: glowColor.opacity(attentionActive
                         ? (stallPulse ? 0.85 : 0.35)
                         : (lowPower.effectiveEnabled ? (glowEventActive ? 0.35 : 0) : 0.35)),
-                    radius: stallActive ? (stallPulse ? 22 : 14) : 14, y: 0
+                    radius: attentionActive ? (stallPulse ? 22 : 14) : 14, y: 0
                 )
-                .animation(stallActive
+                .animation(attentionActive
                     ? .easeInOut(duration: 0.42).repeatForever(autoreverses: true)
                     : .easeInOut(duration: 0.25),
-                    value: stallActive ? stallPulse : glowEventActive)
+                    value: attentionActive ? stallPulse : glowEventActive)
                 .onAppear { stallPulse = true }
                 // 0.45s cross-fade so a threshold crossing (e.g. 79%→80%)
                 // doesn't visibly snap the hue from cobalt to amber.
@@ -434,7 +434,7 @@ private struct GlowLayer: View {
     /// so the glow's visual weight is constant — only the hue signals
     /// severity.
     private var glowColor: Color {
-        if stallActive { return IslandColor.alertRed }
+        if attentionActive { return IslandColor.alertRed }
         switch alerts.severity {
         case .none:     return IslandColor.cobalt
         case .warning:  return IslandColor.alertAmber
@@ -442,11 +442,8 @@ private struct GlowLayer: View {
         }
     }
 
-    /// True when either provider is stalled — bleeds a red pulse through the
-    /// silhouette even at .compact so the user sees the alarm without having
-    /// to hover open the panel.
-    private var stallActive: Bool {
-        monitor.claude == .stalled || monitor.codex == .stalled
+    private var attentionActive: Bool {
+        monitor.claude.isAttentionState || monitor.codex.isAttentionState
     }
 }
 
@@ -477,9 +474,7 @@ private struct LogoOverlay: View {
                 .resizable()
                 .renderingMode(.template)
                 .aspectRatio(contentMode: .fit)
-                // Stalled overrides the brand tint with an alarm red; other
-                // states keep the provider color and signal via pulse + glow.
-                .foregroundStyle(st == .stalled ? Self.alarmRed : color)
+                .foregroundStyle(tint)
                 .frame(width: 20, height: 20)
                 .scaleEffect(scale)
                 .rotationEffect(.degrees(spinAngle))
@@ -506,6 +501,14 @@ private struct LogoOverlay: View {
 
     private static let alarmRed = Color(red: 0.96, green: 0.34, blue: 0.29)
 
+    private var tint: Color {
+        switch st {
+        case .stalled, .authRequired: return Self.alarmRed
+        case .rateLimited: return IslandColor.alertAmber
+        case .idle, .working, .needsYou: return color
+        }
+    }
+
     /// Live state for this provider — idle when the provider is hidden.
     private var st: ActivityMonitor.State {
         isVisible ? monitor.state(for: provider) : .idle
@@ -516,18 +519,18 @@ private struct LogoOverlay: View {
         case .idle:     return 1.0
         case .working:  return pulse ? 1.05 : 1.0
         case .needsYou: return pulse ? 1.13 : 1.0
-        case .stalled:  return pulse ? 1.16 : 1.0
+        case .stalled, .authRequired, .rateLimited:  return pulse ? 1.16 : 1.0
         }
     }
 
-    private var glowColor: Color { st == .stalled ? Self.alarmRed : color }
+    private var glowColor: Color { tint }
 
     private var glowRadius: CGFloat {
         switch st {
         case .idle:     return 0
         case .working:  return pulse ? 5 : 2
         case .needsYou: return pulse ? 9 : 3
-        case .stalled:  return pulse ? 11 : 4
+        case .stalled, .authRequired, .rateLimited:  return pulse ? 11 : 4
         }
     }
 
@@ -536,7 +539,7 @@ private struct LogoOverlay: View {
         case .idle:     return .easeOut(duration: 0.3)
         case .working:  return .easeInOut(duration: 1.7).repeatForever(autoreverses: true)
         case .needsYou: return .easeInOut(duration: 0.75).repeatForever(autoreverses: true)
-        case .stalled:  return .easeInOut(duration: 0.42).repeatForever(autoreverses: true)
+        case .stalled, .authRequired, .rateLimited:  return .easeInOut(duration: 0.42).repeatForever(autoreverses: true)
         }
     }
 

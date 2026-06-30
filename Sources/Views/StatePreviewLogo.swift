@@ -18,8 +18,12 @@ struct StatePreviewLogo: View {
 
     private var image: NSImage? { provider == .claude ? Self.claudeImage : Self.codexImage }
     private var tint: Color {
-        if state == .stalled { return Self.alarmRed }
-        return provider == .claude ? IslandColor.claude : IslandColor.codex
+        switch state {
+        case .stalled, .authRequired: return Self.alarmRed
+        case .rateLimited: return IslandColor.alertAmber
+        case .idle, .working, .needsYou:
+            return provider == .claude ? IslandColor.claude : IslandColor.codex
+        }
     }
 
     var body: some View {
@@ -46,7 +50,7 @@ struct StatePreviewLogo: View {
         switch state {
         case .working:  return pulse ? 1.06 : 0.97
         case .needsYou: return 1.0
-        case .stalled:  return pulse ? 1.14 : 0.97
+        case .stalled, .authRequired, .rateLimited:  return pulse ? 1.14 : 0.97
         case .idle:     return 1.0
         }
     }
@@ -55,13 +59,14 @@ struct StatePreviewLogo: View {
         switch state {
         case .working:  return pulse ? 5 : 2
         case .needsYou: return pulse ? 7 : 4
-        case .stalled:  return pulse ? 10 : 3
+        case .stalled, .authRequired, .rateLimited:  return pulse ? 10 : 3
         case .idle:     return 0
         }
     }
 
     private func animate() {
-        let dur: Double = state == .stalled ? 0.42 : (state == .needsYou ? 1.0 : 1.7)
+        let blocked = state == .stalled || state == .authRequired || state == .rateLimited
+        let dur: Double = blocked ? 0.42 : (state == .needsYou ? 1.0 : 1.7)
         withAnimation(.easeInOut(duration: dur).repeatForever(autoreverses: true)) { pulse = true }
         if state == .needsYou {
             withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {

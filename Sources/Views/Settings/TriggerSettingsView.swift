@@ -6,6 +6,7 @@ import SwiftUI
 struct TriggerSettingsView: View {
     @ObservedObject private var store = TriggerStore.shared
     @ObservedObject private var usage = UsageStore.shared
+    @ObservedObject private var safety = TriggerSafetyStore.shared
 
     @State private var allSessions: [ScannedSession] = []
     @State private var scanning = false
@@ -29,8 +30,10 @@ struct TriggerSettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
+            safetySection
             existingList
             addCard
+            sessionsList
         }
         .padding(.horizontal, 14)
         .padding(.top, 18)
@@ -53,6 +56,31 @@ struct TriggerSettingsView: View {
     }
 
     // MARK: - Existing triggers (grouped by tool)
+
+    private var safetySection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("Safety")
+            SettingsRow(
+                title: "Auto-resume kill switch",
+                subtitle: "When off, Agent Island will never spawn Claude or Codex resume commands."
+            ) {
+                SettingsToggle(isOn: safety.executionEnabled) { safety.executionEnabled.toggle() }
+            }
+            SettingsRow(
+                title: "Dry run",
+                subtitle: "Write the command to the trigger log without running it."
+            ) {
+                SettingsToggle(isOn: safety.dryRun) { safety.dryRun.toggle() }
+            }
+            SettingsRow(
+                title: "Trigger logs",
+                subtitle: "Open the folder where every blocked, dry-run, or live trigger writes a log."
+            ) {
+                PillButton(label: "Logs") { TriggerEngine.shared.openLogsDirectory() }
+            }
+        }
+        .padding(.bottom, 8)
+    }
 
     @ViewBuilder
     private var existingList: some View {
@@ -84,7 +112,13 @@ struct TriggerSettingsView: View {
             ForEach(rows) { trigger in
                 SettingsRow(title: trigger.label, subtitle: subtitle(trigger)) {
                     HStack(spacing: 8) {
+                        PillButton(label: safety.isAllowed(cwd: trigger.cwd) ? "Untrust" : "Trust") {
+                            safety.setAllowed(cwd: trigger.cwd, !safety.isAllowed(cwd: trigger.cwd))
+                        }
                         PillButton(label: "Run") { TriggerEngine.shared.fire(trigger) }
+                        if !trigger.cwd.isEmpty {
+                            PillButton(label: "Open") { TriggerEngine.shared.openProject(for: trigger) }
+                        }
                         SettingsToggle(isOn: trigger.enabled) { store.setEnabled(trigger.id, !trigger.enabled) }
                         Button { store.remove(trigger.id) } label: {
                             Image(systemName: "trash").font(.system(size: 11)).foregroundStyle(.white.opacity(0.36))
@@ -191,6 +225,34 @@ struct TriggerSettingsView: View {
         }
     }
 
+    private var sessionsList: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("Active sessions").padding(.top, 14)
+            if allSessions.isEmpty {
+                Text(L10n.tr(scanning ? "Scanning…" : "No active threads found."))
+                    .font(Typography.label)
+                    .foregroundStyle(.white.opacity(0.36))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+            } else {
+                ForEach(Array(allSessions.prefix(8))) { session in
+                    SettingsRow(
+                        title: session.label,
+                        subtitle: sessionSubtitle(session),
+                        dot: color(session.tool),
+                        chip: session.status.label.uppercased()
+                    ) {
+                        if !session.cwd.isEmpty {
+                            PillButton(label: safety.isAllowed(cwd: session.cwd) ? "Trusted" : "Trust") {
+                                safety.setAllowed(cwd: session.cwd, true)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Helpers
 
     private var resetCaption: String? {
@@ -234,10 +296,19 @@ struct TriggerSettingsView: View {
             ? L10n.tr("after reset")
             : L10n.tr("every %dh", trigger.everyHours)
         var parts = ["「\(trigger.message)」", when]
+        parts.append(safety.isAllowed(cwd: trigger.cwd) ? L10n.tr("trusted") : L10n.tr("not trusted"))
+        if safety.dryRun { parts.append(L10n.tr("dry-run")) }
+        parts.append(TriggerEngine.shared.preview(for: trigger))
         if let last = trigger.lastFired {
             parts.append(L10n.tr("fired %@", Self.rel.localizedString(for: last, relativeTo: Date())))
         }
         return parts.joined(separator: " · ")
+    }
+
+    private func sessionSubtitle(_ session: ScannedSession) -> String {
+        let time = Self.rel.localizedString(for: session.modified, relativeTo: Date())
+        let cwd = session.cwd.isEmpty ? L10n.tr("no project directory") : session.cwd
+        return "\(session.tool.display) · \(session.status.label) · \(time) · \(cwd)"
     }
 
     private func color(_ tool: TriggerTool) -> Color {
