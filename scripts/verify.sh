@@ -6,6 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+./scripts/test-usage-cache.sh
 ./build.sh
 
 BIN="./build/AgentIsland.app/Contents/MacOS/AgentIsland"

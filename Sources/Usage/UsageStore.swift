@@ -176,56 +176,30 @@ final class UsageStore: ObservableObject {
         }
     }
 
-    private struct CacheSnapshot: Codable {
-        var claude: AppUsage
-        var codex: AppUsage
-        var updatedAt: Date
-    }
-
-    private static func loadCachedSnapshot() -> CacheSnapshot? {
+    private static func loadCachedSnapshot() -> UsageCacheSnapshot? {
         guard let data = UserDefaults.standard.data(forKey: cacheKey),
-              let snapshot = try? JSONDecoder().decode(CacheSnapshot.self, from: data),
-              Date().timeIntervalSince(snapshot.updatedAt) <= cacheMaxAge else {
+              let snapshot = try? JSONDecoder().decode(UsageCacheSnapshot.self, from: data) else {
             return nil
         }
-        return snapshot
+        return UsageCachePolicy.restoredSnapshot(snapshot, now: Date(), maxAge: cacheMaxAge)
     }
 
-    private static func saveCachedSnapshot(claude: AppUsage, codex: AppUsage) {
+    private static func saveCachedSnapshot(claude: AppUsage,
+                                           codex: AppUsage,
+                                           fetchedClaude: Bool = true,
+                                           fetchedCodex: Bool = true) {
         let existing = loadCachedSnapshot()
-        let snapshot = CacheSnapshot(
-            claude: cachedCopy(claude) ?? existing?.claude ?? .empty,
-            codex: cachedCopy(codex) ?? existing?.codex ?? .empty,
-            updatedAt: Date()
-        )
-        guard cachedCopy(snapshot.claude) != nil || cachedCopy(snapshot.codex) != nil,
-              let data = try? JSONEncoder().encode(snapshot) else { return }
+        guard let snapshot = UsageCachePolicy.snapshotForSave(
+            claude: claude,
+            codex: codex,
+            existing: existing,
+            now: Date(),
+            fetchedClaude: fetchedClaude,
+            fetchedCodex: fetchedCodex
+        ), let data = try? JSONEncoder().encode(snapshot) else {
+            return
+        }
         UserDefaults.standard.set(data, forKey: cacheKey)
-    }
-
-    private static func cachedCopy(_ usage: AppUsage) -> AppUsage? {
-        guard hasDisplayableValues(usage) else { return nil }
-        return AppUsage(
-            fiveHour: WindowUsage(
-                usedPercent: usage.fiveHour.usedPercent,
-                resetAt: usage.fiveHour.resetAt,
-                error: nil
-            ),
-            weekly: WindowUsage(
-                usedPercent: usage.weekly.usedPercent,
-                resetAt: usage.weekly.resetAt,
-                error: nil
-            ),
-            plan: usage.plan
-        )
-    }
-
-    private static func hasDisplayableValues(_ usage: AppUsage) -> Bool {
-        usage.fiveHour.usedPercent > 0
-            || usage.weekly.usedPercent > 0
-            || usage.fiveHour.resetAt != nil
-            || usage.weekly.resetAt != nil
-            || usage.plan != nil
     }
 
     /// Replace current usage values with hand-tuned percentages so the
@@ -326,7 +300,12 @@ final class UsageStore: ObservableObject {
         await MainActor.run {
             let mergedCodex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
             self.codex = mergedCodex
-            UsageStore.saveCachedSnapshot(claude: self.claude, codex: mergedCodex)
+            UsageStore.saveCachedSnapshot(
+                claude: self.claude,
+                codex: mergedCodex,
+                fetchedClaude: false,
+                fetchedCodex: true
+            )
             self.refreshWarning = UsageStore.isErrorOnly(c) ? L10n.tr("Codex stale") : nil
             if !UsageStore.isErrorOnly(c) {
                 self.lastUpdated = Date()
@@ -340,7 +319,12 @@ final class UsageStore: ObservableObject {
         await MainActor.run {
             let mergedClaude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
             self.claude = mergedClaude
-            UsageStore.saveCachedSnapshot(claude: mergedClaude, codex: self.codex)
+            UsageStore.saveCachedSnapshot(
+                claude: mergedClaude,
+                codex: self.codex,
+                fetchedClaude: true,
+                fetchedCodex: false
+            )
             self.refreshWarning = UsageStore.isErrorOnly(cl) ? L10n.tr("Claude stale") : nil
             if !UsageStore.isErrorOnly(cl) {
                 self.lastUpdated = Date()
