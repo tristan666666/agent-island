@@ -8,8 +8,10 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
     private var deliveredNeedsYouKeys: [String: Date] = [:]
     private var activeNeedsYouKey: [String: String] = [:]
     private var acknowledgedNeedsYouKeys: [String: Date] = [:]
+    private var pendingNeedsYouTasks: [String: Task<Void, Never>] = [:]
     private var observedProviders: Set<String> = []
     private let rememberedKeyLifetime: TimeInterval = 12 * 60 * 60
+    private let needsYouConfirmationDelay: TimeInterval = 20
     private static let acknowledgedDefaultsKey = "AgentIsland.acknowledgedNeedsYouKeys"
 
     private override init() {
@@ -39,6 +41,7 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
         pruneRememberedKeys()
         let isFirstObservation = markObserved(provider)
         guard new == .needsYou else {
+            cancelPending(provider)
             activeNeedsYouKey[provider.rawValue] = nil
             return
         }
@@ -50,17 +53,17 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
         guard acknowledgedNeedsYouKeys[deliveryKey] == nil,
               deliveredNeedsYouKeys[deliveryKey] == nil
         else {
+            cancelPending(provider)
             activeNeedsYouKey[provider.rawValue] = deliveryKey
             return
         }
         guard old != .needsYou || activeNeedsYouKey[provider.rawValue] != deliveryKey else { return }
-        activeNeedsYouKey[provider.rawValue] = deliveryKey
-        deliveredNeedsYouKeys[deliveryKey] = Date()
-        deliver(provider: provider, state: new, thread: thread)
+        scheduleDelivery(provider: provider, state: new, thread: thread, deliveryKey: deliveryKey)
     }
 
     func acknowledge(provider: AlertEngine.Provider, thread: ActivityMonitor.ActiveThread?) {
         let deliveryKey = deliveryKey(provider: provider, state: .needsYou, thread: thread)
+        cancelPending(provider)
         acknowledgedNeedsYouKeys[deliveryKey] = Date()
         persistAcknowledgedKeys()
         activeNeedsYouKey[provider.rawValue] = deliveryKey
@@ -96,7 +99,7 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
         thread: ActivityMonitor.ActiveThread?
     ) -> String {
         let threadKey = threadKey(thread)
-        let turnKey = thread?.modified.timeIntervalSince1970 ?? 0
+        let turnKey = thread?.turnKey ?? "\(thread?.modified.timeIntervalSince1970 ?? 0)"
         return "\(provider.rawValue)-\(state.rawValue)-\(threadKey)-\(turnKey)"
     }
 
@@ -106,6 +109,49 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
         if !thread.sessionId.isEmpty { return thread.sessionId }
         if !thread.cwd.isEmpty { return "\(thread.cwd):\(thread.label)" }
         return thread.label
+    }
+
+    private func scheduleDelivery(
+        provider: AlertEngine.Provider,
+        state: ActivityMonitor.State,
+        thread: ActivityMonitor.ActiveThread?,
+        deliveryKey: String
+    ) {
+        let providerKey = provider.rawValue
+        cancelPending(provider)
+        activeNeedsYouKey[providerKey] = deliveryKey
+        pendingNeedsYouTasks[providerKey] = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: UInt64(needsYouConfirmationDelay * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            confirmAndDeliver(provider: provider, state: state, originalThread: thread, deliveryKey: deliveryKey)
+        }
+    }
+
+    private func confirmAndDeliver(
+        provider: AlertEngine.Provider,
+        state: ActivityMonitor.State,
+        originalThread: ActivityMonitor.ActiveThread?,
+        deliveryKey: String
+    ) {
+        let providerKey = provider.rawValue
+        pendingNeedsYouTasks[providerKey] = nil
+        guard AgentReminderStore.shared.enabled,
+              ActivityMonitor.shared.state(for: provider) == .needsYou,
+              activeNeedsYouKey[providerKey] == deliveryKey,
+              acknowledgedNeedsYouKeys[deliveryKey] == nil,
+              deliveredNeedsYouKeys[deliveryKey] == nil
+        else { return }
+        let currentThread = ActivityMonitor.shared.thread(for: provider) ?? originalThread
+        guard self.deliveryKey(provider: provider, state: state, thread: currentThread) == deliveryKey else { return }
+        deliveredNeedsYouKeys[deliveryKey] = Date()
+        deliver(provider: provider, state: state, thread: currentThread)
+    }
+
+    private func cancelPending(_ provider: AlertEngine.Provider) {
+        let providerKey = provider.rawValue
+        pendingNeedsYouTasks[providerKey]?.cancel()
+        pendingNeedsYouTasks[providerKey] = nil
     }
 
     private static func loadAcknowledgedKeys() -> [String: Date] {

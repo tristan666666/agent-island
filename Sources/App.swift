@@ -68,7 +68,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 label: L10n.tr("Demo thread"),
                 cwd: NSHomeDirectory() + "/Documents/Agent Island",
                 modified: Date(),
-                transcriptPath: nil
+                transcriptPath: nil,
+                turnKey: "demo"
             )
             TurnAlarmWindowController.shared.show(provider: provider, thread: thread)
         }

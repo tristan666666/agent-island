@@ -21,14 +21,16 @@ extension SessionScanner {
             let desktop = desktopSessions[sid]
             let cwd = desktop?.cwd ?? projectFromClaudeTranscript(path)
             let title = desktop?.title ?? ""
+            let state = sessionState(for: path, now: now, lastWorking: lastWorking, turnState: SessionTurnState.claude)
             return ScannedSession(
                 tool: .claude,
                 sessionId: sid,
                 cwd: cwd,
                 label: title.isEmpty ? fallback(cwd, sid) : title,
                 modified: mtime(path),
-                status: status(for: path, now: now, lastWorking: lastWorking, turnDone: claudeTurnDone),
-                transcriptPath: path
+                status: state.status,
+                transcriptPath: path,
+                turnKey: state.turnKey
             )
         }
     }

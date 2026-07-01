@@ -10,6 +10,7 @@ struct ScannedSession: Identifiable, Hashable {
     let modified: Date
     let status: ActivityMonitor.State
     let transcriptPath: String?
+    let turnKey: String?
 }
 
 enum SessionScanner {
@@ -47,14 +48,16 @@ enum SessionScanner {
             let title = object["title"] as? String ?? ""
             let ms = (object["lastActivityAt"] as? Double) ?? (object["createdAt"] as? Double) ?? 0
             let transcript = transcripts[resume]
+            let state = sessionState(for: transcript, now: now, lastWorking: lastWorking, turnState: SessionTurnState.claude)
             out.append(ScannedSession(
                 tool: .claude,
                 sessionId: resume,
                 cwd: cwd,
                 label: title.isEmpty ? fallback(cwd, resume) : title,
                 modified: transcript.map(mtime) ?? Date(timeIntervalSince1970: ms / 1000),
-                status: status(for: transcript, now: now, lastWorking: lastWorking, turnDone: claudeTurnDone),
-                transcriptPath: transcript
+                status: state.status,
+                transcriptPath: transcript,
+                turnKey: state.turnKey
             ))
         }
         return out
@@ -86,14 +89,16 @@ enum SessionScanner {
                 if seenProjects.contains(projectKey) { continue }
                 seenProjects.insert(projectKey)
             }
+            let state = sessionState(for: path, now: now, lastWorking: lastWorking, turnState: SessionTurnState.codex)
             out.append(ScannedSession(
                 tool: .codex,
                 sessionId: sid,
                 cwd: cwd,
                 label: titles[sid] ?? fallback(cwd, sid),
                 modified: mtime(path),
-                status: status(for: path, now: now, lastWorking: lastWorking, turnDone: codexTurnDone),
-                transcriptPath: path
+                status: state.status,
+                transcriptPath: path,
+                turnKey: state.turnKey
             ))
             if out.count >= limit { break }
         }
@@ -147,6 +152,7 @@ enum SessionScanner {
         guard let enumerator = FileManager.default.enumerator(atPath: root) else { return [:] }
         var out: [String: String] = [:]
         for case let rel as String in enumerator where rel.hasSuffix(".jsonl") {
+            if rel.contains("/subagents/") { continue }
             let path = root + "/" + rel
             let sid = ((rel as NSString).lastPathComponent as NSString).deletingPathExtension
             out[sid] = path
@@ -160,40 +166,44 @@ enum SessionScanner {
         lastWorking: [String: Date],
         turnDone: ([String]) -> Bool
     ) -> ActivityMonitor.State {
-        guard let path else { return .idle }
+        sessionState(
+            for: path,
+            now: now,
+            lastWorking: lastWorking,
+            turnState: { lines in SessionTurnStatus(isDone: turnDone(lines), key: nil) }
+        ).status
+    }
+
+    static func sessionState(
+        for path: String?,
+        now: Date,
+        lastWorking: [String: Date],
+        turnState: ([String]) -> SessionTurnStatus
+    ) -> (status: ActivityMonitor.State, turnKey: String?) {
+        guard let path else { return (.idle, nil) }
         let age = now.timeIntervalSince(mtime(path))
-        if age > attentionWindow { return .idle }
+        if age > attentionWindow { return (.idle, nil) }
         let lines = tailLines(path)
+        let turn = turnState(lines)
         if age < activeWindow {
-            return .working
+            return (.working, turn.key)
         }
-        if turnDone(lines) { return age < needsYouCap ? .needsYou : .idle }
-        if age < stallAfter { return .working }
+        if turn.isDone { return (age < needsYouCap ? .needsYou : .idle, turn.key) }
+        if age < stallAfter { return (.working, turn.key) }
         if let seen = lastWorking[path],
            now.timeIntervalSince(seen) < stallCap,
            age < stallCap {
-            return .stalled
+            return (.stalled, turn.key)
         }
-        return .idle
+        return (.idle, turn.key)
     }
 
     static func claudeTurnDone(_ lines: [String]) -> Bool {
-        for line in lines.reversed() {
-            guard let object = json(line), object["type"] as? String == "assistant" else { continue }
-            let stop = (object["message"] as? [String: Any])?["stop_reason"] as? String
-            return stop == "end_turn" || stop == "stop_sequence" || stop == "stop"
-        }
-        return false
+        SessionTurnState.claude(lines).isDone
     }
 
     private static func codexTurnDone(_ lines: [String]) -> Bool {
-        for line in lines.reversed() {
-            guard let object = json(line), object["type"] as? String == "event_msg",
-                  let type = (object["payload"] as? [String: Any])?["type"] as? String else { continue }
-            if type == "task_complete" { return true }
-            if type == "task_started" { return false }
-        }
-        return false
+        SessionTurnState.codex(lines).isDone
     }
 
     private static func tailLines(_ path: String, bytes: UInt64 = 131_072, keep: Int = 200) -> [String] {

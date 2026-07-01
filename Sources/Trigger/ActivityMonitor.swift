@@ -11,6 +11,7 @@ final class ActivityMonitor: ObservableObject {
         let cwd: String
         let modified: Date
         let transcriptPath: String?
+        let turnKey: String?
     }
 
     enum State: Int {
@@ -172,7 +173,8 @@ final class ActivityMonitor: ObservableObject {
             label: session.label,
             cwd: session.cwd,
             modified: session.modified,
-            transcriptPath: session.transcriptPath
+            transcriptPath: session.transcriptPath,
+            turnKey: session.turnKey
         )
         return (session.status, thread)
     }
