@@ -119,7 +119,8 @@ open build/AgentIsland.app
 - `Assets/` —— README 和 release 页面用的公开图片。
 - `docs/` —— 面向贡献者和使用者的公开架构、发布、维护文档。
 - `scripts/`、`build.sh`、`release.sh` —— 本地构建、Sparkle 更新和发布脚本。
-- `website/` —— 本地官网工作区。它在这个公开 App 仓库里被忽略；真正发布官网时应该放在单独的部署仓库里。
+
+官网工作区刻意放在这个 App 仓库外部管理；真正发布官网时应该使用单独的部署项目或仓库。
 
 ## 致谢与许可
 

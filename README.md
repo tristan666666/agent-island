@@ -119,7 +119,8 @@ Deeper implementation write-up: [How Agent Island detects Claude Code and Codex 
 - `Assets/` — public README and release-page images.
 - `docs/` — public architecture, release, and contributor notes.
 - `scripts/`, `build.sh`, `release.sh` — local build, Sparkle, and release tooling.
-- `website/` — local landing-site workspace only. It is intentionally ignored here and should live in its own deploy/repo when published.
+
+The landing website is intentionally kept outside this app repository. If it is published, it should use its own deploy project or repository.
 
 ## Credits & license
 
