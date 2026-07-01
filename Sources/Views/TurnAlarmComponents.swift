@@ -1,61 +1,6 @@
 import AppKit
 import SwiftUI
 
-struct TurnAlarmWindowControls: View {
-    let dismiss: () -> Void
-    let zoom: () -> Void
-
-    var body: some View {
-        HStack(spacing: 8) {
-            TurnAlarmTrafficLightButton(
-                color: Color(red: 1.0, green: 0.376, blue: 0.341),
-                symbol: "xmark",
-                action: dismiss
-            )
-            TurnAlarmTrafficLightButton(
-                color: Color(red: 1.0, green: 0.741, blue: 0.180),
-                symbol: "minus",
-                action: dismiss
-            )
-            TurnAlarmTrafficLightButton(
-                color: Color(red: 0.157, green: 0.800, blue: 0.251),
-                symbol: "plus",
-                action: zoom
-            )
-        }
-        .frame(height: 20)
-    }
-}
-
-private struct TurnAlarmTrafficLightButton: View {
-    let color: Color
-    let symbol: String
-    let action: () -> Void
-    @State private var isHovering = false
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(color)
-                    .overlay {
-                        Circle()
-                            .strokeBorder(.black.opacity(0.18), lineWidth: 0.5)
-                    }
-                Image(systemName: symbol)
-                    .font(.system(size: 6.2, weight: .bold))
-                    .foregroundStyle(.black.opacity(isHovering ? 0.52 : 0))
-                    .animation(.easeOut(duration: 0.10), value: isHovering)
-            }
-            .frame(width: 12, height: 12)
-            .frame(width: 20, height: 20)
-            .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovering = $0 }
-    }
-}
-
 struct TurnAlarmProviderMark: View {
     let provider: AlertEngine.Provider
     let providerColor: Color

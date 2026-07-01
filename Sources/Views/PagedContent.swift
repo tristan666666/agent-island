@@ -16,6 +16,7 @@ import SwiftUI
 struct PagedContent: View {
     @ObservedObject var model: IslandModel
     @ObservedObject private var screenPref = ScreenPref.shared
+    @ObservedObject private var costPanelVisibility = CostPanelVisibilityStore.shared
     @State private var peekOffset: CGFloat = 0
 
     var body: some View {
@@ -25,9 +26,11 @@ struct PagedContent: View {
                 UsageView()
                     .offset(y: compactPageYOffset)
                     .frame(width: pageWidth)
-                CostView()
-                    .offset(y: compactPageYOffset)
-                    .frame(width: pageWidth)
+                if costPanelVisibility.showInTopPanel {
+                    CostView()
+                        .offset(y: compactPageYOffset)
+                        .frame(width: pageWidth)
+                }
                 OverviewView(model: model)
                     .frame(width: pageWidth)
                 TriggerPageView()
@@ -35,10 +38,12 @@ struct PagedContent: View {
                     .frame(width: pageWidth)
             }
             .frame(width: pageWidth, height: geo.size.height, alignment: .topLeading)
-            .offset(x: (-pageWidth * CGFloat(screenPref.screen.pageIndex)) + peekOffset)
+            .offset(x: (-pageWidth * CGFloat(screenPref.visiblePageIndex)) + peekOffset)
             .animation(.pageSwipe, value: screenPref.screen)
+            .animation(.pageSwipe, value: costPanelVisibility.showInTopPanel)
             .clipped()
             .onAppear {
+                screenPref.ensureVisibleScreen()
                 // Discoverability cue, not decorative motion — fires even
                 // when @Environment(\.accessibilityReduceMotion) is on,
                 // because without it reduce-motion users have no path to
@@ -56,6 +61,9 @@ struct PagedContent: View {
                 if swiped, peekOffset != 0 {
                     withAnimation(.pageSwipe) { peekOffset = 0 }
                 }
+            }
+            .onChange(of: costPanelVisibility.showInTopPanel) { _ in
+                screenPref.ensureVisibleScreen()
             }
         }
     }

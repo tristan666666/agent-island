@@ -31,7 +31,7 @@
 "Both" = "两者";
 "Both providers hidden" = "两个服务都已隐藏";
 "BY MODEL" = "按模型";
-"Chart style" = "图表样式";
+"Chart style" = "用量显示";
 "Check" = "检查";
 "Check for new versions in the background and notify you when one's available." = "在后台检查新版本，有可用更新时通知你。";
 "Check for updates automatically" = "自动检查更新";
@@ -42,13 +42,16 @@
 "AgentIsland panel" = "AgentIsland 面板";
 "Compact" = "紧凑";
 "Cost" = "成本";
-"Cost view" = "成本视图";
+"Cost view" = "成本显示";
 "Counts everything — input, output, and cache. Mirrors ccusage." = "统计所有 token：输入、输出和缓存；与 ccusage 一致。";
 "Crit" = "危急";
 "Critical" = "危急";
 "Current mode" = "当前模式";
 "Current mode: %@" = "当前模式：%@";
 "Current mode: %@ on %@. Best for MacBooks with a camera notch." = "当前模式：%@，显示在 %@。适合有摄像头刘海的 MacBook。";
+"Current mode: %@ on %@. Narrower top bar for non-notch Macs and external displays." = "当前模式：%@，显示在 %@。顶部更窄，适合无刘海 Mac 和外接显示器。";
+"Current mode: %@ on %@. Uses the narrower layout, but the hardware notch still sets the minimum width." = "当前模式：%@，显示在 %@。使用较窄布局，但真实刘海宽度仍会作为最小宽度。";
+"Current mode: %@ on %@. Wider top bar that visually matches MacBooks with a camera notch." = "当前模式：%@，显示在 %@。顶部更宽，更接近有刘海 MacBook 的视觉比例。";
 "Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays." = "当前模式：%@，显示在 %@。适合旧款 MacBook、台式 Mac 和外接显示器。";
 "Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays. %@" = "当前模式：%@，显示在 %@。适合旧款 MacBook、台式 Mac 和外接显示器。%@";
 "current display" = "当前显示器";
@@ -132,6 +135,13 @@
 "TREND" = "趋势";
 "USD" = "USD";
 "Usage" = "用量";
+"Usage display" = "用量显示";
+"Cost display" = "成本显示";
+"Top bar" = "顶部显示";
+"Show cost page in top panel" = "在顶部面板显示成本页";
+"Include local token cost/value as a swipe page in the island." = "把本地 token 成本和价值页加入顶部面板，可左右滑动查看。";
+"Always show usage in top bar" = "在顶部常显用量";
+"Keep the 5-hour and weekly percentages beside the logos without hovering." = "无需悬停，也在 Logo 两侧显示 5 小时和本周用量百分比。";
 "Updates" = "更新";
 "VALUE" = "价值";
 "Warn" = "警告";
@@ -161,10 +171,10 @@
 "Swipe to change pages." = "滑动切换页面。";
 
 /* Auto-Trigger (Triggers tab) */
-"Triggers" = "自动触发";
-"Auto-Trigger" = "自动触发";
+"Triggers" = "自动续跑";
+"Auto-Trigger" = "自动续跑";
 "When your AI limit resets, auto-send a message so a session keeps running." = "允许 Agent Island 在用量恢复后，帮你续跑指定会话。";
-"No triggers yet — add one below." = "还没有触发器，在下面加一条。";
+"No triggers yet — add one below." = "还没有规则，在下面加一条。";
 "New trigger" = "新建自动续跑规则";
 "Session" = "线程";
 "Message" = "消息";
@@ -178,7 +188,7 @@
 "Open" = "打开";
 "Scanning…" = "扫描中…";
 "No sessions" = "无可用线程";
-"Delete trigger" = "删除触发器";
+"Delete trigger" = "删除规则";
 "after reset" = "额度重置后";
 "every %dh" = "每 %d 小时";
 "fired %@" = "上次 %@";
@@ -189,10 +199,10 @@
 "No active threads" = "没有可续跑会话";
 
 /* Auto-trigger island page (4th page) */
-"Auto-trigger" = "自动触发";
+"Auto-trigger" = "自动续跑";
 "Manage" = "管理";
-"No triggers yet." = "还没有触发器。";
-"Add a trigger" = "新建触发器";
+"No triggers yet." = "还没有规则。";
+"Add a trigger" = "新建规则";
 
 /* Status guide (legend) */
 "Status guide" = "状态说明";
@@ -212,16 +222,12 @@
 "Safety" = "执行安全";
 "Auto-resume kill switch" = "自动续跑执行开关";
 "When off, Agent Island will never spawn Claude or Codex resume commands." = "关闭后，Agent Island 不会启动任何 Claude 或 Codex 续跑命令。";
-"Dry run" = "仅演练";
-"Write the command to the trigger log without running it." = "只把将要执行的命令写入触发日志，不真正运行。";
-"Trigger logs" = "触发日志";
-"Open the folder where every blocked, dry-run, or live trigger writes a log." = "打开日志文件夹，查看被拦截、演练或实际执行的触发记录。";
-"Logs" = "日志";
+"Records" = "记录";
+"Open the folder with blocked and executed auto-resume records." = "打开记录文件夹，查看被拦截或已执行的自动续跑记录。";
 "Allow resume" = "允许续跑";
 "Disallow resume" = "取消允许";
 "resume allowed" = "已允许自动续跑";
 "resume not allowed" = "未允许自动续跑";
-"dry-run" = "仅演练";
 "Command unavailable" = "命令不可用";
 "no project directory" = "无项目目录";
 "running" = "正在跑";
@@ -245,7 +251,7 @@
 "Show thread details" = "显示线程详情";
 "Show session and project names in alarms and notifications." = "在闹钟和通知里显示会话名、项目名。";
 "Alarm sound" = "闹钟声音";
-"Keep ringing until you dismiss the turn alarm." = "闹钟会持续响，直到你关闭提醒窗口。";
+"Keep ringing until you dismiss the turn alarm." = "提醒音会在关闭闹钟后停止。";
 "Choose a built-in sound or use your own file." = "选择闹钟提示音，也可以使用自己的音频文件。";
 "Volume" = "音量";
 "Adjust how loud the alarm sound is." = "调节闹钟提醒音量。";

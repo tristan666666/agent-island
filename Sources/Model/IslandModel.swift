@@ -83,15 +83,15 @@ final class IslandModel: ObservableObject {
     }
 
     func advanceScreen() {
-        let pages = ScreenPref.Screen.allCases
-        let index = ScreenPref.shared.screen.pageIndex
+        let pages = ScreenPref.shared.visibleScreens
+        let index = ScreenPref.shared.visiblePageIndex
         guard index < pages.count - 1 else { return }
         showScreen(pages[index + 1])
     }
 
     func rewindScreen() {
-        let pages = ScreenPref.Screen.allCases
-        let index = ScreenPref.shared.screen.pageIndex
+        let pages = ScreenPref.shared.visibleScreens
+        let index = ScreenPref.shared.visiblePageIndex
         guard index > 0 else { return }
         showScreen(pages[index - 1])
     }

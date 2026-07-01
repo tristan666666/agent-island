@@ -6,7 +6,10 @@ extension IslandRootView {
         if NSEvent.modifierFlags.contains(.command) {
             switch ScreenPref.shared.screen {
             case .usage: StylePref.shared.cycle()
-            case .cost: CostStylePref.shared.cycle()
+            case .cost:
+                if CostPanelVisibilityStore.shared.showInTopPanel {
+                    CostStylePref.shared.cycle()
+                }
             case .overview, .triggers: return
             }
             return

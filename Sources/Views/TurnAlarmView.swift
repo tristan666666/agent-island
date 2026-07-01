@@ -7,7 +7,6 @@ struct TurnAlarmView: View {
     let thread: ActivityMonitor.ActiveThread?
     @ObservedObject var windowState: TurnAlarmWindowState
     let dismiss: () -> Void
-    let zoom: () -> Void
 
     @ObservedObject private var reminders = AgentReminderStore.shared
     @State private var glowPulse = false
@@ -89,11 +88,6 @@ struct TurnAlarmView: View {
                 Spacer(minLength: 18)
             }
             .padding(.horizontal, 28)
-
-            TurnAlarmWindowControls(dismiss: dismiss, zoom: zoom)
-                .padding(.top, 14)
-                .padding(.leading, 14)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(width: windowState.size.width, height: windowState.size.height)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))

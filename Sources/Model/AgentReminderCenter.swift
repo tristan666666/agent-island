@@ -6,14 +6,14 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
     static let shared = AgentReminderCenter()
 
     private var deliveredNeedsYouKeys: [String: Date] = [:]
-    private var deliveredNeedsYouScopes: [String: Date] = [:]
-    private var activeNeedsYouScope: [String: String] = [:]
+    private var activeNeedsYouKey: [String: String] = [:]
     private var acknowledgedNeedsYouKeys: [String: Date] = [:]
-    private var acknowledgedNeedsYouScopes: [String: Date] = [:]
-    private var acknowledgedNeedsYouProviders: [String: Date] = [:]
+    private var observedProviders: Set<String> = []
     private let rememberedKeyLifetime: TimeInterval = 12 * 60 * 60
+    private static let acknowledgedDefaultsKey = "AgentIsland.acknowledgedNeedsYouKeys"
 
     private override init() {
+        acknowledgedNeedsYouKeys = Self.loadAcknowledgedKeys()
         super.init()
     }
 
@@ -37,52 +37,57 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
     ) {
         guard AgentReminderStore.shared.enabled else { return }
         pruneRememberedKeys()
+        let isFirstObservation = markObserved(provider)
         guard new == .needsYou else {
-            activeNeedsYouScope[provider.rawValue] = nil
-            clearNeedsYouScopes(for: provider)
-            acknowledgedNeedsYouProviders[provider.rawValue] = nil
+            activeNeedsYouKey[provider.rawValue] = nil
             return
         }
         let deliveryKey = deliveryKey(provider: provider, state: new, thread: thread)
-        let scopeKey = needsYouScopeKey(provider: provider, thread: thread)
-        guard acknowledgedNeedsYouProviders[provider.rawValue] == nil,
-              acknowledgedNeedsYouKeys[deliveryKey] == nil,
-              acknowledgedNeedsYouScopes[scopeKey] == nil,
-              deliveredNeedsYouKeys[deliveryKey] == nil,
-              deliveredNeedsYouScopes[scopeKey] == nil
-        else {
-            activeNeedsYouScope[provider.rawValue] = scopeKey
+        if isFirstObservation {
+            baseline(provider: provider, deliveryKey: deliveryKey)
             return
         }
-        guard old != .needsYou || activeNeedsYouScope[provider.rawValue] != scopeKey else { return }
-        activeNeedsYouScope[provider.rawValue] = scopeKey
+        guard acknowledgedNeedsYouKeys[deliveryKey] == nil,
+              deliveredNeedsYouKeys[deliveryKey] == nil
+        else {
+            activeNeedsYouKey[provider.rawValue] = deliveryKey
+            return
+        }
+        guard old != .needsYou || activeNeedsYouKey[provider.rawValue] != deliveryKey else { return }
+        activeNeedsYouKey[provider.rawValue] = deliveryKey
         deliveredNeedsYouKeys[deliveryKey] = Date()
-        deliveredNeedsYouScopes[scopeKey] = Date()
         deliver(provider: provider, state: new, thread: thread)
     }
 
     func acknowledge(provider: AlertEngine.Provider, thread: ActivityMonitor.ActiveThread?) {
         let deliveryKey = deliveryKey(provider: provider, state: .needsYou, thread: thread)
-        let scopeKey = needsYouScopeKey(provider: provider, thread: thread)
         acknowledgedNeedsYouKeys[deliveryKey] = Date()
-        acknowledgedNeedsYouScopes[scopeKey] = Date()
-        acknowledgedNeedsYouProviders[provider.rawValue] = Date()
-        activeNeedsYouScope[provider.rawValue] = scopeKey
+        persistAcknowledgedKeys()
+        activeNeedsYouKey[provider.rawValue] = deliveryKey
     }
 
     private func pruneRememberedKeys() {
         let cutoff = Date().addingTimeInterval(-rememberedKeyLifetime)
+        let acknowledgedBefore = acknowledgedNeedsYouKeys
         deliveredNeedsYouKeys = deliveredNeedsYouKeys.filter { $0.value >= cutoff }
-        deliveredNeedsYouScopes = deliveredNeedsYouScopes.filter { $0.value >= cutoff }
         acknowledgedNeedsYouKeys = acknowledgedNeedsYouKeys.filter { $0.value >= cutoff }
-        acknowledgedNeedsYouScopes = acknowledgedNeedsYouScopes.filter { $0.value >= cutoff }
-        acknowledgedNeedsYouProviders = acknowledgedNeedsYouProviders.filter { $0.value >= cutoff }
+        if acknowledgedBefore.count != acknowledgedNeedsYouKeys.count {
+            persistAcknowledgedKeys()
+        }
     }
 
-    private func clearNeedsYouScopes(for provider: AlertEngine.Provider) {
-        let prefix = "\(provider.rawValue)-\(ActivityMonitor.State.needsYou.rawValue)-"
-        deliveredNeedsYouScopes = deliveredNeedsYouScopes.filter { !$0.key.hasPrefix(prefix) }
-        acknowledgedNeedsYouScopes = acknowledgedNeedsYouScopes.filter { !$0.key.hasPrefix(prefix) }
+    private func markObserved(_ provider: AlertEngine.Provider) -> Bool {
+        let providerKey = provider.rawValue
+        guard !observedProviders.contains(providerKey) else { return false }
+        observedProviders.insert(providerKey)
+        return true
+    }
+
+    private func baseline(provider: AlertEngine.Provider, deliveryKey: String) {
+        let providerKey = provider.rawValue
+        acknowledgedNeedsYouKeys[deliveryKey] = Date()
+        activeNeedsYouKey[providerKey] = deliveryKey
+        persistAcknowledgedKeys()
     }
 
     private func deliveryKey(
@@ -95,16 +100,24 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
         return "\(provider.rawValue)-\(state.rawValue)-\(threadKey)-\(turnKey)"
     }
 
-    private func needsYouScopeKey(provider: AlertEngine.Provider, thread: ActivityMonitor.ActiveThread?) -> String {
-        "\(provider.rawValue)-\(ActivityMonitor.State.needsYou.rawValue)-\(threadKey(thread))"
-    }
-
     private func threadKey(_ thread: ActivityMonitor.ActiveThread?) -> String {
         guard let thread else { return "" }
         if let transcriptPath = thread.transcriptPath, !transcriptPath.isEmpty { return transcriptPath }
         if !thread.sessionId.isEmpty { return thread.sessionId }
         if !thread.cwd.isEmpty { return "\(thread.cwd):\(thread.label)" }
         return thread.label
+    }
+
+    private static func loadAcknowledgedKeys() -> [String: Date] {
+        guard let stored = UserDefaults.standard.dictionary(forKey: acknowledgedDefaultsKey) as? [String: TimeInterval] else {
+            return [:]
+        }
+        return stored.mapValues(Date.init(timeIntervalSince1970:))
+    }
+
+    private func persistAcknowledgedKeys() {
+        let stored = acknowledgedNeedsYouKeys.mapValues(\.timeIntervalSince1970)
+        UserDefaults.standard.set(stored, forKey: Self.acknowledgedDefaultsKey)
     }
 
     private func deliver(provider: AlertEngine.Provider, state: ActivityMonitor.State, thread: ActivityMonitor.ActiveThread?) {

@@ -15,6 +15,7 @@ struct SettingsView: View {
     @ObservedObject private var tokenMode = TokenCountModeStore.shared
     @ObservedObject private var lowPower = LowPowerModeStore.shared
     @ObservedObject private var alwaysShow = AlwaysShowUsageStore.shared
+    @ObservedObject private var costPanelVisibility = CostPanelVisibilityStore.shared
     @ObservedObject private var alertPrefs = AlertThresholdStore.shared
     @ObservedObject private var spacing = IslandSpacingStore.shared
     @ObservedObject private var targetDisplay = IslandTargetDisplayStore.shared
@@ -141,6 +142,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             chartSection
             costStyleSection
+            topPanelSection
             targetDisplaySection
             displayModeSection
         }
@@ -205,14 +207,6 @@ struct SettingsView: View {
                 subtitle: appLanguage.language.subtitle
             ) {
                 languagePicker
-            }
-            SettingsRow(
-                title: "Always show usage",
-                subtitle: "Keep the percentage and time remaining visible without hovering."
-            ) {
-                SettingsToggle(isOn: alwaysShow.enabled) {
-                    alwaysShow.enabled.toggle()
-                }
             }
             SettingsRow(
                 title: "Low Power Mode",
@@ -636,7 +630,7 @@ struct SettingsView: View {
 
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Chart style", hint: "⌘-click to cycle")
+            sectionLabel("Usage display", hint: "⌘-click to cycle")
             ChartStylePicker(selected: $stylePref.style)
                 .padding(.top, 4)
                 .padding(.horizontal, 10)
@@ -648,10 +642,41 @@ struct SettingsView: View {
 
     private var costStyleSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sectionLabel("Cost view", hint: "⌘-click to cycle")
-            CostStylePicker(selected: $costStylePref.style)
-                .padding(.top, 4)
-                .padding(.horizontal, 10)
+            sectionLabel("Cost display", hint: costPanelVisibility.showInTopPanel ? "⌘-click to cycle" : nil)
+            SettingsRow(
+                title: "Show cost page in top panel",
+                subtitle: "Include local token cost/value as a swipe page in the island."
+            ) {
+                SettingsToggle(isOn: costPanelVisibility.showInTopPanel) {
+                    withAnimation(.pageSwipe) {
+                        costPanelVisibility.showInTopPanel.toggle()
+                        ScreenPref.shared.ensureVisibleScreen()
+                    }
+                }
+            }
+            if costPanelVisibility.showInTopPanel {
+                CostStylePicker(selected: $costStylePref.style)
+                    .padding(.top, 4)
+                    .padding(.horizontal, 10)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 14)
+        .padding(.bottom, 14)
+    }
+
+    private var topPanelSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("Top bar")
+            SettingsRow(
+                title: "Always show usage in top bar",
+                subtitle: "Keep the 5-hour and weekly percentages beside the logos without hovering."
+            ) {
+                SettingsToggle(isOn: alwaysShow.enabled) {
+                    alwaysShow.enabled.toggle()
+                }
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 14)
@@ -680,20 +705,19 @@ struct SettingsView: View {
         case .compact:
             guard DisplayInfo.currentTarget()?.notch.hasNotch == true else {
                 return L10n.tr(
-                    "Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays.",
+                    "Current mode: %@ on %@. Narrower top bar for non-notch Macs and external displays.",
                     currentMode,
                     targetName
                 )
             }
             return L10n.tr(
-                "Current mode: %@ on %@. Best for older MacBooks, desktop Macs, and external displays. %@",
+                "Current mode: %@ on %@. Uses the narrower layout, but the hardware notch still sets the minimum width.",
                 currentMode,
-                targetName,
-                L10n.tr("Hardware notch is kept as the minimum width.")
+                targetName
             )
         case .notchStyle:
             return L10n.tr(
-                "Current mode: %@ on %@. Best for MacBooks with a camera notch.",
+                "Current mode: %@ on %@. Wider top bar that visually matches MacBooks with a camera notch.",
                 currentMode,
                 targetName
             )

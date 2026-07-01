@@ -43,7 +43,6 @@ extension TriggerSettingsView {
             : L10n.tr("every %dh", trigger.everyHours)
         var parts = ["「\(trigger.message)」", when]
         parts.append(safety.isAllowed(cwd: trigger.cwd) ? L10n.tr("resume allowed") : L10n.tr("resume not allowed"))
-        if safety.dryRun { parts.append(L10n.tr("dry-run")) }
         parts.append(TriggerEngine.shared.preview(for: trigger))
         if let last = trigger.lastFired {
             parts.append(L10n.tr("fired %@", Self.rel.localizedString(for: last, relativeTo: Date())))

@@ -52,19 +52,37 @@ final class ScreenPref: ObservableObject {
         self.hasSwipedScreen = AppEnvironment.isDemo ? false : UserDefaults.standard.bool(forKey: Self.swipedKey)
     }
 
+    var visibleScreens: [Screen] {
+        if CostPanelVisibilityStore.shared.showInTopPanel {
+            return [.usage, .cost, .overview, .triggers]
+        }
+        return [.usage, .overview, .triggers]
+    }
+
+    var visiblePageIndex: Int {
+        visibleScreens.firstIndex(of: screen) ?? 0
+    }
+
+    func ensureVisibleScreen() {
+        guard !visibleScreens.contains(screen) else { return }
+        screen = .usage
+    }
+
     /// Edge-clamped carousel — swiping past the rightmost page does
     /// nothing (no wrap to page 1), and likewise for the leftmost page.
     /// Matches the iOS Home Screen rubber-band feel where the user
     /// understands they've hit a boundary instead of teleporting around.
     func advance() {
-        let pages = Screen.allCases
-        guard screen.pageIndex < pages.count - 1 else { return }
-        screen = pages[screen.pageIndex + 1]
+        let pages = visibleScreens
+        let index = visiblePageIndex
+        guard index < pages.count - 1 else { return }
+        screen = pages[index + 1]
     }
 
     func rewind() {
-        let pages = Screen.allCases
-        guard screen.pageIndex > 0 else { return }
-        screen = pages[screen.pageIndex - 1]
+        let pages = visibleScreens
+        let index = visiblePageIndex
+        guard index > 0 else { return }
+        screen = pages[index - 1]
     }
 }

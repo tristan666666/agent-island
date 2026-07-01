@@ -156,11 +156,6 @@ final class TriggerEngine: ObservableObject {
             NSLog("AgentIsland trigger: %@ binary not found", trigger.tool.rawValue)
             return
         }
-        if safety.dryRun {
-            logStatus("dry-run: would execute\n\(command.display)", for: trigger)
-            TriggerStore.shared.markFired(trigger.id)
-            return
-        }
 
         let task = Process()
         task.launchPath = command.binary

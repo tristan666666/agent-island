@@ -52,7 +52,7 @@ Agent Island handles both from the notch. Usage and reset timing are there to he
 
 ### Keep long runs moving
 
-Agent Island can auto-send a message (`继续`, `OK`, whatever you set) to a chosen Claude or Codex session so the task keeps going — no babysitting. You can trigger it from the provider's real reset timing, or run it on a fixed every-N-hours schedule in **Settings → 自动触发**.
+Agent Island can auto-send a message (`继续`, `OK`, whatever you set) to a chosen Claude or Codex session so the task keeps going — no babysitting. You can resume from the provider's real reset timing, or run on a fixed every-N-hours schedule in **Settings → Auto Resume**.
 
 ### ⚡ Live session state, on your logos
 
@@ -77,7 +77,7 @@ Codex Island is a **passive meter** — it shows your usage. Agent Island is **a
 | Usage / cost / reset in the notch | ✅ | ✅ *(inherited)* |
 | **Auto-resume** a chosen long-running session | — | ✅ Claude & Codex |
 | **Logo reacts to session state** — rotate (working), alarm popup (your turn), red pulse (needs attention) | — | ✅ |
-| **Auto-Trigger** page inside the island | — | ✅ |
+| **Auto Resume** page inside the island | — | ✅ |
 | **Status-guide** settings tab (live legend + alarm sound controls) | — | ✅ |
 | Cross-tool session picker with real thread titles, archived filtered out | — | ✅ |
 
@@ -87,7 +87,7 @@ In short: Codex Island tells you *how much you've used*; Agent Island keeps sess
 
 Download the current DMG, drag AgentIsland into Applications, then open it:
 
-[**Download AgentIsland-1.2.4.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.4/AgentIsland-1.2.4.dmg)
+[**Download AgentIsland-1.2.5.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.5/AgentIsland-1.2.5.dmg)
 
 macOS 13+. Universal binary (Apple Silicon + Intel).
 
@@ -107,8 +107,8 @@ open build/AgentIsland.app
 - **Reset times** come from each provider's real usage API.
 - **Session state** is read from the transcript files: mtime (is it still producing output?) plus the turn-complete markers — Claude's `stop_reason: end_turn`, Codex's `task_complete` event.
 - **Resume** runs `claude --resume … -p "<msg>" --dangerously-skip-permissions` or `codex exec resume … "<msg>" --dangerously-bypass-approvals-and-sandbox`. Run logs land in `~/Library/Application Support/AgentIsland/trigger-runs/`.
-- The Mac must be awake for a trigger to fire, and each fire spends tokens.
-- ⚠️ A trigger resumes the agent **unattended with permission checks off** (the `--dangerously-*` flags above). Only attach triggers to sessions you trust. Everything runs locally as you; nothing is sent anywhere.
+- The Mac must be awake for auto-resume to run, and each run spends tokens.
+- ⚠️ Auto-resume restores the agent **unattended with permission checks off** (the `--dangerously-*` flags above). Only attach rules to sessions you trust. Everything runs locally as you; nothing is sent anywhere.
 
 Deeper implementation write-up: [How Agent Island detects Claude Code and Codex session state](docs/how-agent-island-detects-session-state.md).
 

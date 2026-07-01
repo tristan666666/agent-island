@@ -2,69 +2,8 @@ import AppKit
 import SwiftUI
 
 private final class TurnAlarmPanel: NSPanel {
-    var primaryAction: (() -> Void)?
-    var dismissAction: (() -> Void)?
-    var zoomAction: (() -> Void)?
-
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
-
-    override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown {
-            let point = event.locationInWindow
-            if contains(closeHitRect, point: point) || contains(minimizeHitRect, point: point) {
-                dismissAction?()
-                return
-            }
-            if contains(zoomHitRect, point: point) {
-                zoomAction?()
-                return
-            }
-            if contains(dismissHitRect, point: point) {
-                dismissAction?()
-                return
-            }
-            if contains(primaryHitRect, point: point) {
-                primaryAction?()
-                return
-            }
-        }
-        super.sendEvent(event)
-    }
-
-    private func contains(_ rect: NSRect, point: NSPoint) -> Bool {
-        rect.contains(point) || flipped(rect).contains(point)
-    }
-
-    private func flipped(_ rect: NSRect) -> NSRect {
-        NSRect(x: rect.minX, y: frame.height - rect.maxY, width: rect.width, height: rect.height)
-    }
-
-    private var primaryHitRect: NSRect {
-        let width = frame.width
-        return NSRect(x: (width - 396) / 2, y: 126 + verticalButtonOffset, width: 396, height: 62)
-    }
-
-    private var dismissHitRect: NSRect {
-        let width = frame.width
-        return NSRect(x: (width - 396) / 2, y: 54 + verticalButtonOffset, width: 396, height: 70)
-    }
-
-    private var verticalButtonOffset: CGFloat {
-        max(0, frame.height - 520) * 0.34
-    }
-
-    private var closeHitRect: NSRect {
-        NSRect(x: 14, y: frame.height - 34, width: 20, height: 20)
-    }
-
-    private var minimizeHitRect: NSRect {
-        NSRect(x: 42, y: frame.height - 34, width: 20, height: 20)
-    }
-
-    private var zoomHitRect: NSRect {
-        NSRect(x: 70, y: frame.height - 34, width: 20, height: 20)
-    }
 }
 
 final class TurnAlarmWindowState: ObservableObject {
@@ -108,7 +47,7 @@ final class TurnAlarmWindowController: NSWindowController, NSWindowDelegate {
         didAcknowledgeCurrentAlarm = false
         let panel = TurnAlarmPanel(
             contentRect: NSRect(origin: .zero, size: Self.panelSize),
-            styleMask: [.borderless],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -120,25 +59,15 @@ final class TurnAlarmWindowController: NSWindowController, NSWindowDelegate {
             windowState: state,
             dismiss: { [weak self, weak panel] in
                 self?.dismissCurrentAlarm(panel)
-            },
-            zoom: { [weak self, weak panel] in
-                self?.toggleZoom(panel)
             }
         )
         panel.contentView = TurnAlarmHostingView(rootView: rootView)
-        panel.primaryAction = { [weak self, weak panel] in
-            TurnAlarmNavigator.open(provider: provider, thread: thread)
-            self?.dismissCurrentAlarm(panel)
-        }
-        panel.dismissAction = { [weak self, weak panel] in
-            self?.dismissCurrentAlarm(panel)
-        }
-        panel.zoomAction = { [weak self, weak panel] in
-            self?.toggleZoom(panel)
-        }
         panel.setFrame(NSRect(origin: .zero, size: Self.panelSize), display: false)
         panel.title = L10n.tr("Turn alarm")
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
         panel.isMovableByWindowBackground = true
+        panel.minSize = Self.panelSize
         panel.isRestorable = false
         panel.isReleasedWhenClosed = false
         panel.hidesOnDeactivate = false
@@ -204,6 +133,11 @@ final class TurnAlarmWindowController: NSWindowController, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         acknowledgeCurrentAlarm()
         return true
+    }
+
+    func windowShouldZoom(_ sender: NSWindow, toFrame newFrame: NSRect) -> Bool {
+        toggleZoom(sender as? NSPanel)
+        return false
     }
 
     func windowDidResize(_ notification: Notification) {

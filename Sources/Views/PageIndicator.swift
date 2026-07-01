@@ -7,14 +7,16 @@ import SwiftUI
 struct PageIndicator: View {
     @ObservedObject var model: IslandModel
     @ObservedObject private var screenPref = ScreenPref.shared
+    @ObservedObject private var costPanelVisibility = CostPanelVisibilityStore.shared
 
     var body: some View {
         HStack(spacing: 5) {
-            ForEach(ScreenPref.Screen.allCases, id: \.self) { screen in
+            ForEach(screenPref.visibleScreens, id: \.self) { screen in
                 dot(for: screen)
             }
         }
         .animation(.strongEaseOut, value: screenPref.screen)
+        .animation(.strongEaseOut, value: costPanelVisibility.showInTopPanel)
     }
 
     private func dot(for screen: ScreenPref.Screen) -> some View {
@@ -33,6 +35,8 @@ struct PageIndicator: View {
     }
 
     private func accessibilityLabel(for screen: ScreenPref.Screen) -> String {
-        L10n.tr("%@ page, %d of %d", screen.pageLabel, screen.pageIndex + 1, ScreenPref.Screen.allCases.count)
+        let screens = screenPref.visibleScreens
+        let index = screens.firstIndex(of: screen) ?? 0
+        return L10n.tr("%@ page, %d of %d", screen.pageLabel, index + 1, screens.count)
     }
 }

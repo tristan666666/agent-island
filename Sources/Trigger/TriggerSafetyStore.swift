@@ -5,15 +5,10 @@ final class TriggerSafetyStore: ObservableObject {
     static let shared = TriggerSafetyStore()
 
     private static let enabledKey = "AgentIsland.triggerExecutionEnabled"
-    private static let dryRunKey = "AgentIsland.triggerDryRun"
     private static let allowedRootsKey = "AgentIsland.triggerAllowedRoots"
 
     @Published var executionEnabled: Bool {
         didSet { UserDefaults.standard.set(executionEnabled, forKey: Self.enabledKey) }
-    }
-
-    @Published var dryRun: Bool {
-        didSet { UserDefaults.standard.set(dryRun, forKey: Self.dryRunKey) }
     }
 
     @Published private(set) var allowedRoots: Set<String> {
@@ -24,7 +19,7 @@ final class TriggerSafetyStore: ObservableObject {
         executionEnabled = UserDefaults.standard.object(forKey: Self.enabledKey) == nil
             ? true
             : UserDefaults.standard.bool(forKey: Self.enabledKey)
-        dryRun = UserDefaults.standard.bool(forKey: Self.dryRunKey)
+        UserDefaults.standard.removeObject(forKey: "AgentIsland.triggerDryRun")
         allowedRoots = Set(UserDefaults.standard.stringArray(forKey: Self.allowedRootsKey) ?? [])
     }
 

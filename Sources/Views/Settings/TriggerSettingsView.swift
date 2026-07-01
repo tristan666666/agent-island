@@ -1,8 +1,5 @@
 import SwiftUI
 
-/// Settings tab for auto-triggers. Choose a tool (Claude or Codex), pick one of
-/// its active threads, set a message, and choose when it fires — at the real
-/// 5h-window reset (the signal the island already tracks) or a fixed interval.
 struct TriggerSettingsView: View {
     @ObservedObject var store = TriggerStore.shared
     @ObservedObject var usage = UsageStore.shared
@@ -66,16 +63,10 @@ struct TriggerSettingsView: View {
                 SettingsToggle(isOn: safety.executionEnabled) { safety.executionEnabled.toggle() }
             }
             SettingsRow(
-                title: "Dry run",
-                subtitle: "Write the command to the trigger log without running it."
+                title: "Records",
+                subtitle: "Open the folder with blocked and executed auto-resume records."
             ) {
-                SettingsToggle(isOn: safety.dryRun) { safety.dryRun.toggle() }
-            }
-            SettingsRow(
-                title: "Trigger logs",
-                subtitle: "Open the folder where every blocked, dry-run, or live trigger writes a log."
-            ) {
-                PillButton(label: "Logs") { TriggerEngine.shared.openLogsDirectory() }
+                PillButton(label: "Open") { TriggerEngine.shared.openLogsDirectory() }
             }
         }
         .padding(.bottom, 8)
