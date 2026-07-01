@@ -1,8 +1,0 @@
-{
-  "scripts": {
-    "start": "node server.mjs",
-    "test": "node tests/smoke.mjs"
-  },
-  "dependencies": {},
-  "devDependencies": {}
-}

@@ -1,9 +1,0 @@
-.env*
-.gitignore
-.vercel
-.vercel/
-node_modules/
-package.json
-server.mjs
-tests/
-*.log

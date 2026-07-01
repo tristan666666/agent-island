@@ -20,11 +20,17 @@ Vendor/
 .gstack/
 
 # QA / browse / playwright tooling artifacts.
+.omo/
 .playwright-mcp/
 /agentisland-*.png
 
 # Launch-video / marketing assets live in their own working dir.
 marketing/
+
+# Local website workspace. The public app repo should not track landing-site
+# source; keep that in a separate deploy/repo when publishing the website.
+website/
+02_Website/
 
 # Maintainer-only notes (launch playbooks, analytics ops, internal dashboards).
 # See CLAUDE.md → "docs/ vs notes/" for what belongs here vs in public docs/.
@@ -34,3 +40,18 @@ notes/
 .agents/
 skills-lock.json
 AGENTS.md
+
+# iOS companion — secrets & local signing. The repo is public; none of this
+# may ever be committed.
+*.p8
+AuthKey_*.p8
+*.local.xcconfig
+01_iOS端/**/Local.xcconfig
+01_iOS端/**/*.mobileprovision
+01_iOS端/
+Sources/Push/
+Sources/Shared/
+# Cached push tokens / device registry (Mac push sender, gitignored Application Support is outside the repo anyway).
+**/push-devices.json
+.env
+.env.*
