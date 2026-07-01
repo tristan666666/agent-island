@@ -1,11 +1,11 @@
 # Agent Island · Handoff
 
-State of the project as of v1.2.2 — what shipped, where things live, what the knobs are. Read this first if you (or another agent) are picking it up cold.
+State of the project as of v1.2.4 — what shipped, where things live, what the knobs are. Read this first if you (or another agent) are picking it up cold.
 
 ## Shipped
 
 - Repo: **https://github.com/tristan666666/agent-island** (public, MIT, fork of [codex-island](https://github.com/ericjypark/codex-island))
-- Release candidate: **v1.2.2** — https://github.com/tristan666666/agent-island/releases/tag/v1.2.2
+- Current release: **v1.2.4** — https://github.com/tristan666666/agent-island/releases/tag/v1.2.4
 - App bundle id: `dev.agentisland.AgentIsland` · binary at `/Applications/AgentIsland.app`
 - Sparkle auto-update: **enabled** by default through the GitHub release appcast in `build.sh`.
 
@@ -92,7 +92,7 @@ Typecheck only (fast): `swiftc -typecheck -target arm64-apple-macos13.0 -parse-a
 - **Launch distribution started.** X posts/replies, OpenAI Community posts/replies, Reddit megathread comment, and targeted GitHub issue comments have been sent. HN / PH have not been posted.
 - **Triggers persist under `"AgentIsland.triggers"`**; the per-tool reset baselines under `"AgentIsland.triggerResetBaselines"`. (The old `"CodexIsland.triggers"` key was retired during the rebrand — pre-rename triggers do not migrate.)
 - **Demo screenshots** are user-local unless listed in `Assets/`.
-- **No tests.** The whole project compiles with `swiftc` over `Sources/**/*.swift`; no XCTest target. If adding tests, factor `Scan` and the turn-done helpers further — they're already pure functions.
+- **Tests are still lightweight.** The app compiles with `swiftc` over `Sources/**/*.swift`; focused script-level regression tests cover extracted pure helpers when a behavior needs protection.
 - **Code-review punch list**: all high/medium release blockers from the v1.2 review pass must stay fixed before tagging. Low items still open:
   - `tailLines` UTF-8 boundary truncation (cosmetic, first partial line is dropped anyway).
   - `Process` standardOutput FileHandle in `TriggerEngine.fire()` closes when the spawned process retains it; trailing log bytes may truncate. Cosmetic.

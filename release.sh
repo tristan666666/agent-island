@@ -4,10 +4,9 @@
 # Developer Program certificates involved. Ad-hoc codesign keeps Apple Silicon
 # Macs from rejecting the binary as "damaged" after re-download.
 #
-# Update flow: after the DMG is built, signs it with the Sparkle EdDSA key
-# (private key stored in the user's Keychain by `bin/generate_keys`) and
-# regenerates docs/appcast.xml. Commit + push appcast.xml to publish the
-# update — Sparkle clients fetch it from main.
+# Update flow: after the DMG is built, sign it with the Sparkle EdDSA key
+# and generate dist/appcast.xml. CI uploads the DMG and appcast as GitHub
+# Release assets; Sparkle clients fetch the latest appcast from the release.
 
 set -euo pipefail
 cd "$(dirname "$0")"

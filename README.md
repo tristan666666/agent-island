@@ -2,7 +2,7 @@
 
 # Agent Island
 
-**Your AI night-watch — auto-resume long Claude/Codex runs and see live state in the notch.**
+**A status companion for Claude Code and Codex — usage, session state, and the moment it is your turn.**
 
 [简体中文](README.zh-CN.md)
 
@@ -14,7 +14,7 @@
 [![Listed in awesome-vibe-coding-resources](https://img.shields.io/badge/listed%20in-awesome--vibe--coding--resources-ec4899?style=for-the-badge)](https://github.com/acvnace/awesome-vibe-coding-resources#desktop-apps)
 
 <a href="https://www.producthunt.com/products/agent-island-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-agent-island-2">
-  <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1175477&theme=light" alt="Agent Island - AI night-watch for Claude Code and Codex runs | Product Hunt" width="250" height="54">
+  <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1175477&theme=light" alt="Agent Island - status companion for Claude Code and Codex | Product Hunt" width="250" height="54">
 </a>
 
 <video src="https://github.com/user-attachments/assets/d69b41e0-9298-4f17-b6c9-6014f3bd956b" controls width="900"></video>
@@ -32,12 +32,12 @@
 
 </div>
 
-Agent Island lives in your MacBook notch. It is a small native macOS companion for long Claude Code and Codex runs:
+Agent Island lives in your MacBook notch. It is a small native macOS companion for Claude Code and Codex runs:
 
 - **Auto-resume** a chosen session when it can continue.
 - Show each session's **live state** right on the provider logo.
 
-Usage and reset timing are included for planning, but the main point is simpler: keep long-running agents moving, and make their state visible without opening every terminal.
+Usage and reset timing are included for planning, but the main point is simpler: keep agent work visible, and know when the next move is yours without opening every terminal.
 
 ## Why
 
@@ -50,7 +50,7 @@ Agent Island handles both from the notch. Usage and reset timing are there to he
 
 ## Features
 
-### 🌙 Auto-resume long runs — the night-watch
+### Keep long runs moving
 
 Agent Island can auto-send a message (`继续`, `OK`, whatever you set) to a chosen Claude or Codex session so the task keeps going — no babysitting. You can trigger it from the provider's real reset timing, or run it on a fixed every-N-hours schedule in **Settings → 自动触发**.
 
@@ -81,13 +81,13 @@ Codex Island is a **passive meter** — it shows your usage. Agent Island is **a
 | **Status-guide** settings tab (live legend + alarm sound controls) | — | ✅ |
 | Cross-tool session picker with real thread titles, archived filtered out | — | ✅ |
 
-In short: Codex Island tells you *how much you've used*; Agent Island helps long-running agents keep moving and shows you their state — the night-watch.
+In short: Codex Island tells you *how much you've used*; Agent Island keeps session state, usage, and the handoff moment in view.
 
 ## Quick start
 
 Download the current DMG, drag AgentIsland into Applications, then open it:
 
-[**Download AgentIsland-1.2.2.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.2/AgentIsland-1.2.2.dmg)
+[**Download AgentIsland-1.2.4.dmg**](https://github.com/tristan666666/agent-island/releases/download/v1.2.4/AgentIsland-1.2.4.dmg)
 
 macOS 13+. Universal binary (Apple Silicon + Intel).
 
@@ -112,8 +112,17 @@ open build/AgentIsland.app
 
 Deeper implementation write-up: [How Agent Island detects Claude Code and Codex session state](docs/how-agent-island-detects-session-state.md).
 
+## Repository layout
+
+- `Sources/` — the native macOS app.
+- `Resources/` — app-bundled icons, logos, and localization files.
+- `Assets/` — public README and release-page images.
+- `docs/` — public architecture, release, and contributor notes.
+- `scripts/`, `build.sh`, `release.sh` — local build, Sparkle, and release tooling.
+- `website/` — local landing-site workspace only. It is intentionally ignored here and should live in its own deploy/repo when published.
+
 ## Credits & license
 
-Agent Island is a fork of **[codex-island](https://github.com/ericjypark/codex-island)** by **Eric Park** — the usage-island and cost-tracking foundation are his work. Agent Island adds the auto-trigger watchman and the live session-state animations, and rebrands the project.
+Agent Island is a fork of **[codex-island](https://github.com/ericjypark/codex-island)** by **Eric Park** — the usage-island and cost-tracking foundation are his work. Agent Island adds auto-trigger, live session-state animations, and its own product direction.
 
 MIT licensed — © 2026 Eric Park. This fork retains that notice. See [LICENSE](LICENSE).
