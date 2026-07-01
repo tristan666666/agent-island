@@ -58,7 +58,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showDemoTurnAlarmIfNeeded() {
-        guard let raw = ProcessInfo.processInfo.environment["AGENTISLAND_DEMO_TURN_ALARM"] else { return }
+        guard AppEnvironment.isDemo,
+              let raw = ProcessInfo.processInfo.environment["AGENTISLAND_DEMO_TURN_ALARM"] else { return }
         let provider: AlertEngine.Provider = raw.lowercased() == "claude" ? .claude : .codex
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 600_000_000)

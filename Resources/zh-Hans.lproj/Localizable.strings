@@ -141,7 +141,7 @@
 "waiting for browser…" = "等待浏览器…";
 "waiting for login…" = "等待登录…";
 "You" = "你";
-"Your AI usage limits, living in your notch." = "你的 AI 守夜人 —— 看用量，自动续跑。";
+"A status companion for Claude Code and Codex" = "Claude Code 和 Codex 的状态伴侣";
 "Your language change will take effect after AgentIsland restarts." = "语言更改会在 AgentIsland 重启后生效。";
 "⌘-click to cycle" = "⌘ 点击切换";
 "⌘1 — pull real provider data" = "⌘1 — 拉取真实服务数据";

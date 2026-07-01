@@ -5,7 +5,13 @@ import Network
 @MainActor
 final class UsageStore: ObservableObject {
     static let shared = UsageStore()
-    private init() {}
+    private init() {
+        guard !AppEnvironment.isDemo,
+              let snapshot = Self.loadCachedSnapshot() else { return }
+        claude = snapshot.claude
+        codex = snapshot.codex
+        lastUpdated = snapshot.updatedAt
+    }
 
     @Published var claude: AppUsage = .empty
     @Published var codex: AppUsage = .empty
@@ -28,6 +34,8 @@ final class UsageStore: ObservableObject {
     private var netMonitor: NWPathMonitor?
     private let netQueue = DispatchQueue(label: "UsageStore.network")
     private var lastNetStatus: NWPath.Status?
+    private static let cacheKey = "UsageStore.lastSuccessfulUsage.v1"
+    private static let cacheMaxAge: TimeInterval = 24 * 60 * 60
 
     /// Anthropic's /api/oauth/usage is aggressively rate-limited per token.
     /// `RefreshIntervalStore` enforces a 5-minute floor (300/900/1800).
@@ -111,8 +119,11 @@ final class UsageStore: ObservableObject {
             let codexFailed = UsageStore.isErrorOnly(c)
             let claudeFailed = UsageStore.isErrorOnly(cl)
 
-            self.codex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
-            self.claude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
+            let mergedCodex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
+            let mergedClaude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
+            self.codex = mergedCodex
+            self.claude = mergedClaude
+            UsageStore.saveCachedSnapshot(claude: mergedClaude, codex: mergedCodex)
             self.refreshWarning = UsageStore.refreshWarning(codexFailed: codexFailed, claudeFailed: claudeFailed)
             self.lastUpdated = Date()
             self.loading = false
@@ -163,6 +174,58 @@ final class UsageStore: ObservableObject {
         case (false, true): return L10n.tr("Codex stale")
         case (false, false): return nil
         }
+    }
+
+    private struct CacheSnapshot: Codable {
+        var claude: AppUsage
+        var codex: AppUsage
+        var updatedAt: Date
+    }
+
+    private static func loadCachedSnapshot() -> CacheSnapshot? {
+        guard let data = UserDefaults.standard.data(forKey: cacheKey),
+              let snapshot = try? JSONDecoder().decode(CacheSnapshot.self, from: data),
+              Date().timeIntervalSince(snapshot.updatedAt) <= cacheMaxAge else {
+            return nil
+        }
+        return snapshot
+    }
+
+    private static func saveCachedSnapshot(claude: AppUsage, codex: AppUsage) {
+        let existing = loadCachedSnapshot()
+        let snapshot = CacheSnapshot(
+            claude: cachedCopy(claude) ?? existing?.claude ?? .empty,
+            codex: cachedCopy(codex) ?? existing?.codex ?? .empty,
+            updatedAt: Date()
+        )
+        guard cachedCopy(snapshot.claude) != nil || cachedCopy(snapshot.codex) != nil,
+              let data = try? JSONEncoder().encode(snapshot) else { return }
+        UserDefaults.standard.set(data, forKey: cacheKey)
+    }
+
+    private static func cachedCopy(_ usage: AppUsage) -> AppUsage? {
+        guard hasDisplayableValues(usage) else { return nil }
+        return AppUsage(
+            fiveHour: WindowUsage(
+                usedPercent: usage.fiveHour.usedPercent,
+                resetAt: usage.fiveHour.resetAt,
+                error: nil
+            ),
+            weekly: WindowUsage(
+                usedPercent: usage.weekly.usedPercent,
+                resetAt: usage.weekly.resetAt,
+                error: nil
+            ),
+            plan: usage.plan
+        )
+    }
+
+    private static func hasDisplayableValues(_ usage: AppUsage) -> Bool {
+        usage.fiveHour.usedPercent > 0
+            || usage.weekly.usedPercent > 0
+            || usage.fiveHour.resetAt != nil
+            || usage.weekly.resetAt != nil
+            || usage.plan != nil
     }
 
     /// Replace current usage values with hand-tuned percentages so the
@@ -261,7 +324,9 @@ final class UsageStore: ObservableObject {
     private func finishCodexReauthWithSingleFetch() async {
         let c = await UsageFetcher.fetchCodex()
         await MainActor.run {
-            self.codex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
+            let mergedCodex = UsageStore.mergedUsage(existing: self.codex, fetched: c)
+            self.codex = mergedCodex
+            UsageStore.saveCachedSnapshot(claude: self.claude, codex: mergedCodex)
             self.refreshWarning = UsageStore.isErrorOnly(c) ? L10n.tr("Codex stale") : nil
             if !UsageStore.isErrorOnly(c) {
                 self.lastUpdated = Date()
@@ -273,7 +338,9 @@ final class UsageStore: ObservableObject {
     private func finishClaudeReauthWithSingleFetch() async {
         let cl = await UsageFetcher.fetchClaude()
         await MainActor.run {
-            self.claude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
+            let mergedClaude = UsageStore.mergedUsage(existing: self.claude, fetched: cl)
+            self.claude = mergedClaude
+            UsageStore.saveCachedSnapshot(claude: mergedClaude, codex: self.codex)
             self.refreshWarning = UsageStore.isErrorOnly(cl) ? L10n.tr("Claude stale") : nil
             if !UsageStore.isErrorOnly(cl) {
                 self.lastUpdated = Date()
