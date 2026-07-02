@@ -97,6 +97,67 @@ private func testMetadataTouchedOldClaudeTranscriptIsIdle() throws {
     try expect(state.modified == old, "semantic modified time should come from the last real turn")
 }
 
+private func testFreshClaudeEndTurnIsImmediatelyNeedsYou() throws {
+    let now = try date("2026-07-02T01:15:42.000Z")
+    let tmp = try writeTranscript([
+        #"{"type":"user","uuid":"u1","timestamp":"2026-07-02T01:15:00.000Z","message":{"role":"user","content":"run"}}"#,
+        #"{"type":"assistant","uuid":"a1","timestamp":"2026-07-02T01:15:41.000Z","message":{"stop_reason":"end_turn"}}"#
+    ], modified: now)
+    defer { try? FileManager.default.removeItem(at: tmp) }
+    let state = SessionScanner.sessionState(
+        for: tmp.path,
+        now: now,
+        lastWorking: [:],
+        turnState: SessionTurnState.claude
+    )
+    try expect(state.status == .needsYou, "fresh Claude end_turn should immediately become needs-you")
+}
+
+private func testClaudeDesktopNewerActivitySuppressesOldEndTurn() throws {
+    let old = try date("2026-06-25T16:27:50.585Z")
+    let desktopActivity = try date("2026-07-02T01:15:42.000Z")
+    let now = try date("2026-07-02T01:15:44.000Z")
+    let tmp = try writeTranscript([
+        #"{"type":"assistant","uuid":"a1","timestamp":"2026-06-25T16:27:50.585Z","message":{"stop_reason":"end_turn"}}"#,
+        #"{"type":"mode","sessionId":"s1"}"#
+    ], modified: now)
+    defer { try? FileManager.default.removeItem(at: tmp) }
+    let state = SessionScanner.sessionState(
+        for: tmp.path,
+        now: now,
+        lastWorking: [:],
+        externalActivityDate: desktopActivity,
+        turnState: SessionTurnState.claude
+    )
+    try expect(state.status == .working, "newer Claude Desktop activity should suppress stale end_turn and show running")
+    try expect(state.modified == desktopActivity, "newer desktop activity should drive the effective state time")
+    try expect(old < state.modified, "test fixture must keep transcript older than desktop activity")
+}
+
+private func testClaudeStreamingAssistantIsWorking() throws {
+    let now = try date("2026-07-02T01:15:44.000Z")
+    let tmp = try writeTranscript([
+        #"{"type":"user","uuid":"u1","timestamp":"2026-07-02T01:15:00.000Z","message":{"role":"user","content":"run"}}"#,
+        #"{"type":"assistant","uuid":"a1","timestamp":"2026-07-02T01:15:42.000Z","message":{"stop_reason":null}}"#
+    ], modified: now)
+    defer { try? FileManager.default.removeItem(at: tmp) }
+    let state = SessionScanner.sessionState(
+        for: tmp.path,
+        now: now,
+        lastWorking: [:],
+        turnState: SessionTurnState.claude
+    )
+    try expect(state.status == .working, "Claude assistant output without end_turn should stay running")
+}
+
+private func writeTranscript(_ lines: [String], modified: Date) throws -> URL {
+    let tmp = FileManager.default.temporaryDirectory
+        .appendingPathComponent("agent-island-session-state-\(UUID().uuidString).jsonl")
+    try lines.joined(separator: "\n").write(to: tmp, atomically: true, encoding: .utf8)
+    try FileManager.default.setAttributes([.modificationDate: modified], ofItemAtPath: tmp.path)
+    return tmp
+}
+
 private func date(_ raw: String) throws -> Date {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -115,7 +176,10 @@ private enum SessionTurnStateTestRunner {
             ("codex user after complete suppresses stale alarm", testCodexUserAfterTaskCompleteIsNotNeedsYou),
             ("codex start after complete suppresses stale alarm", testCodexTaskStartedAfterTaskCompleteIsNotNeedsYou),
             ("codex complete still triggers needs-you", testCodexTaskCompleteIsNeedsYou),
-            ("metadata-touched old claude transcript is idle", testMetadataTouchedOldClaudeTranscriptIsIdle)
+            ("metadata-touched old claude transcript is idle", testMetadataTouchedOldClaudeTranscriptIsIdle),
+            ("fresh claude end_turn is immediately needs-you", testFreshClaudeEndTurnIsImmediatelyNeedsYou),
+            ("newer claude desktop activity suppresses old end_turn", testClaudeDesktopNewerActivitySuppressesOldEndTurn),
+            ("claude streaming assistant is working", testClaudeStreamingAssistantIsWorking)
         ]
 
         do {

@@ -11,7 +11,7 @@ final class AgentReminderCenter: NSObject, UNUserNotificationCenterDelegate {
     private var pendingNeedsYouTasks: [String: Task<Void, Never>] = [:]
     private var observedProviders: Set<String> = []
     private let rememberedKeyLifetime: TimeInterval = 12 * 60 * 60
-    private let needsYouConfirmationDelay: TimeInterval = 20
+    private let needsYouConfirmationDelay: TimeInterval = 2
     private static let acknowledgedDefaultsKey = "AgentIsland.acknowledgedNeedsYouKeys"
 
     private override init() {

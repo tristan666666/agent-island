@@ -199,13 +199,17 @@ enum SessionScanner {
         let externalIsNewer = isLater(externalActivityDate, than: turn.activityDate)
         let age = now.timeIntervalSince(effectiveModified)
         if age > attentionWindow { return (.idle, turn.key, effectiveModified) }
-        if age < activeWindow {
-            return (.working, turn.key, effectiveModified)
-        }
-        if externalIsNewer && age < stallAfter {
-            return (.working, turn.key, effectiveModified)
+        if externalIsNewer {
+            if age < stallAfter { return (.working, turn.key, effectiveModified) }
+            if let seen = lastWorking[path],
+               now.timeIntervalSince(seen) < stallCap,
+               age < stallCap {
+                return (.stalled, turn.key, effectiveModified)
+            }
+            return (.idle, turn.key, effectiveModified)
         }
         if turn.isDone { return (age < needsYouCap ? .needsYou : .idle, turn.key, effectiveModified) }
+        if age < activeWindow { return (.working, turn.key, effectiveModified) }
         if age < stallAfter { return (.working, turn.key, effectiveModified) }
         if let seen = lastWorking[path],
            now.timeIntervalSince(seen) < stallCap,
