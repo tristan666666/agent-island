@@ -21,13 +21,19 @@ extension SessionScanner {
             let desktop = desktopSessions[sid]
             let cwd = desktop?.cwd ?? projectFromClaudeTranscript(path)
             let title = desktop?.title ?? ""
-            let state = sessionState(for: path, now: now, lastWorking: lastWorking, turnState: SessionTurnState.claude)
+            let state = sessionState(
+                for: path,
+                now: now,
+                lastWorking: lastWorking,
+                externalActivityDate: desktop?.lastActivityAt,
+                turnState: SessionTurnState.claude
+            )
             return ScannedSession(
                 tool: .claude,
                 sessionId: sid,
                 cwd: cwd,
                 label: title.isEmpty ? fallback(cwd, sid) : title,
-                modified: mtime(path),
+                modified: state.modified,
                 status: state.status,
                 transcriptPath: path,
                 turnKey: state.turnKey
@@ -35,10 +41,10 @@ extension SessionScanner {
         }
     }
 
-    private static func claudeDesktopIndex() -> [String: (title: String, cwd: String)] {
+    private static func claudeDesktopIndex() -> [String: (title: String, cwd: String, lastActivityAt: Date?)] {
         let root = NSHomeDirectory() + "/Library/Application Support/Claude/claude-code-sessions"
         guard let enumerator = FileManager.default.enumerator(atPath: root) else { return [:] }
-        var out: [String: (title: String, cwd: String)] = [:]
+        var out: [String: (title: String, cwd: String, lastActivityAt: Date?)] = [:]
         for case let rel as String in enumerator
         where rel.hasSuffix(".json") && (rel as NSString).lastPathComponent.hasPrefix("local_") {
             let path = root + "/" + rel
@@ -47,7 +53,12 @@ extension SessionScanner {
                   let sid = object["cliSessionId"] as? String,
                   !sid.isEmpty
             else { continue }
-            out[sid] = (object["title"] as? String ?? "", object["cwd"] as? String ?? "")
+            let ms = object["lastActivityAt"] as? Double
+            out[sid] = (
+                object["title"] as? String ?? "",
+                object["cwd"] as? String ?? "",
+                ms.map { Date(timeIntervalSince1970: $0 / 1000) }
+            )
         }
         return out
     }

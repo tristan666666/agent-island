@@ -47,14 +47,21 @@ enum SessionScanner {
             let cwd = object["cwd"] as? String ?? ""
             let title = object["title"] as? String ?? ""
             let ms = (object["lastActivityAt"] as? Double) ?? (object["createdAt"] as? Double) ?? 0
+            let desktopActivity = Date(timeIntervalSince1970: ms / 1000)
             let transcript = transcripts[resume]
-            let state = sessionState(for: transcript, now: now, lastWorking: lastWorking, turnState: SessionTurnState.claude)
+            let state = sessionState(
+                for: transcript,
+                now: now,
+                lastWorking: lastWorking,
+                externalActivityDate: desktopActivity,
+                turnState: SessionTurnState.claude
+            )
             out.append(ScannedSession(
                 tool: .claude,
                 sessionId: resume,
                 cwd: cwd,
                 label: title.isEmpty ? fallback(cwd, resume) : title,
-                modified: transcript.map(mtime) ?? Date(timeIntervalSince1970: ms / 1000),
+                modified: state.modified,
                 status: state.status,
                 transcriptPath: transcript,
                 turnKey: state.turnKey
@@ -95,7 +102,7 @@ enum SessionScanner {
                 sessionId: sid,
                 cwd: cwd,
                 label: titles[sid] ?? fallback(cwd, sid),
-                modified: mtime(path),
+                modified: state.modified,
                 status: state.status,
                 transcriptPath: path,
                 turnKey: state.turnKey
@@ -170,7 +177,7 @@ enum SessionScanner {
             for: path,
             now: now,
             lastWorking: lastWorking,
-            turnState: { lines in SessionTurnStatus(isDone: turnDone(lines), key: nil) }
+            turnState: { lines in SessionTurnStatus(isDone: turnDone(lines), key: nil, activityDate: nil) }
         ).status
     }
 
@@ -178,24 +185,34 @@ enum SessionScanner {
         for path: String?,
         now: Date,
         lastWorking: [String: Date],
+        externalActivityDate: Date? = nil,
         turnState: ([String]) -> SessionTurnStatus
-    ) -> (status: ActivityMonitor.State, turnKey: String?) {
-        guard let path else { return (.idle, nil) }
-        let age = now.timeIntervalSince(mtime(path))
-        if age > attentionWindow { return (.idle, nil) }
+    ) -> (status: ActivityMonitor.State, turnKey: String?, modified: Date) {
+        guard let path else {
+            return (.idle, nil, externalActivityDate ?? .distantPast)
+        }
+        let fileModified = mtime(path)
         let lines = tailLines(path)
         let turn = turnState(lines)
+        let semanticModified = latestDate(turn.activityDate, externalActivityDate)
+        let effectiveModified = semanticModified ?? fileModified
+        let externalIsNewer = isLater(externalActivityDate, than: turn.activityDate)
+        let age = now.timeIntervalSince(effectiveModified)
+        if age > attentionWindow { return (.idle, turn.key, effectiveModified) }
         if age < activeWindow {
-            return (.working, turn.key)
+            return (.working, turn.key, effectiveModified)
         }
-        if turn.isDone { return (age < needsYouCap ? .needsYou : .idle, turn.key) }
-        if age < stallAfter { return (.working, turn.key) }
+        if externalIsNewer && age < stallAfter {
+            return (.working, turn.key, effectiveModified)
+        }
+        if turn.isDone { return (age < needsYouCap ? .needsYou : .idle, turn.key, effectiveModified) }
+        if age < stallAfter { return (.working, turn.key, effectiveModified) }
         if let seen = lastWorking[path],
            now.timeIntervalSince(seen) < stallCap,
            age < stallCap {
-            return (.stalled, turn.key)
+            return (.stalled, turn.key, effectiveModified)
         }
-        return (.idle, turn.key)
+        return (.idle, turn.key, effectiveModified)
     }
 
     static func claudeTurnDone(_ lines: [String]) -> Bool {
@@ -224,5 +241,20 @@ enum SessionScanner {
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: path),
               let date = attrs[.modificationDate] as? Date else { return .distantPast }
         return date
+    }
+
+    private static func latestDate(_ lhs: Date?, _ rhs: Date?) -> Date? {
+        switch (lhs, rhs) {
+        case let (lhs?, rhs?): return max(lhs, rhs)
+        case let (lhs?, nil): return lhs
+        case let (nil, rhs?): return rhs
+        case (nil, nil): return nil
+        }
+    }
+
+    private static func isLater(_ lhs: Date?, than rhs: Date?) -> Bool {
+        guard let lhs else { return false }
+        guard let rhs else { return true }
+        return lhs.timeIntervalSince(rhs) > 0.5
     }
 }
